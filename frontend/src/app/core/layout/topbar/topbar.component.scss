@@ -1,0 +1,123 @@
+:host {
+  display: block;
+  height: 64px;
+  width: 100%;
+}
+
+/* ============================= */
+/* Topbar */
+/* ============================= */
+
+.topbar {
+  height: 64px;
+  padding: 0 2rem;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+
+  background: #152F40;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border-bottom: 1px solid #152F40;
+  box-shadow: 0 4px 20px #00000040;
+
+  color: #f9fafb;
+}
+
+/* ============================= */
+/* Left */
+/* ============================= */
+
+.topbar .left {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ============================= */
+/* Center */
+/* ============================= */
+
+.topbar .center {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.topbar .center span {
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0.9;
+  transition: 0.2s ease;
+}
+
+.topbar .center span:hover {
+  opacity: 1;
+}
+
+/* ============================= */
+/* Right */
+/* ============================= */
+
+.topbar .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar .user {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* ============================= */
+/* Button */
+/* ============================= */
+
+.topbar button {
+  background: #152F40;
+  border: none;
+  color: white;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.topbar button:hover {
+  transform: translateY(-2px);
+  background: #2F6073;
+  box-shadow: 0 6px 18px #4ad9cb84;
+}
+
+.topbar button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ============================= */
+/* Responsive */
+/* ============================= */
+
+@media (max-width: 768px) {
+  .topbar {
+    grid-template-columns: 1fr auto;
+  }
+
+  .topbar .center {
+    display: none;
+  }
+}

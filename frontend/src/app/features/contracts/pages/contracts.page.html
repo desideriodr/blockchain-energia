@@ -1,0 +1,43 @@
+<header class="page-header">
+  <h1>Mis contratos</h1>
+</header>
+
+<section class="contracts card">
+
+  <table class="contracts-table">
+    <thead>
+      <tr>
+        <th>Vendedor</th>
+        <th>Comprador</th>
+        <th>Precio</th>
+      </tr>
+    </thead>
+
+    <tbody *ngIf="contracts$ | async as contracts">
+      <ng-container *ngFor="let contract of contracts">
+
+        <!-- FILA PRINCIPAL -->
+        <tr
+          class="row"
+          (click)="toggle(contract.id)"
+          [class.active]="contract.id === selectedContractId"
+        >
+          <td class="mono">{{ getFullName(contract.seller) }}</td>
+          <td class="mono">{{ getFullName(contract.buyer) }}</td>
+          <td class="mono">{{ contract.pricePerKwhCop }}</td>
+        </tr>
+
+        <!-- DETALLE INLINE -->
+        <tr *ngIf="contract.id === selectedContractId" class="detail-row">
+          <td colspan="5">
+            <app-contract-detail-inline
+              [contractId]="selectedContractId!">
+            </app-contract-detail-inline>
+          </td>
+        </tr>
+
+      </ng-container>
+    </tbody>
+  </table>
+
+</section>

@@ -1,0 +1,198 @@
+/* ============================= */
+/*  Página Signup */
+/* ============================= */
+
+.signup-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+
+  background:
+    linear-gradient(#152F40, #73B8BF);
+}
+
+/* ============================= */
+/*  Card */
+/* ============================= */
+
+.signup-form {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.5s ease;
+}
+
+.signup-form form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* ============================= */
+/*  Título */
+/* ============================= */
+
+.signup-form h2 {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.9rem;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
+
+  background: linear-gradient(135deg, #73B8BF, #4AD9CA);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================= */
+/*  Input con Icono */
+/* ============================= */
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.95rem 1rem 0.95rem 3rem;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  outline: none;
+  background: #f9f9f9;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  border-color: #73B8BF;
+  box-shadow: 0 0 0 3px rgba(42, 125, 225, 0.15);
+  background: white;
+}
+
+.input-group .icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.input-group:focus-within .icon {
+  color: #73B8BF;
+}
+
+.input-group svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* ============================= */
+/*  Botón */
+/* ============================= */
+
+.signup-button {
+  padding: 0.95rem;
+  border-radius: 12px;
+  border: none;
+  background: #73B8BF;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.signup-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.signup-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* ============================= */
+/*  Error */
+/* ============================= */
+
+.signup-form div[ng-reflect-ng-if] {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #e53935;
+}
+
+/* ============================= */
+/*  Link */
+/* ============================= */
+
+.signup-form a {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #73B8BF;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.signup-form a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 0%;
+  height: 2px;
+  background: #73B8BF;
+  transition: width 0.3s ease;
+}
+
+.signup-form a:hover::after {
+  width: 100%;
+}
+
+/* ============================= */
+/*  Animaciones */
+/* ============================= */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

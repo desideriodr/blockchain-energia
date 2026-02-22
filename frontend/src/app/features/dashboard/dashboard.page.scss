@@ -1,0 +1,36 @@
+//Dame un estilo moderno para el dashboard.page.html
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  padding: 2rem;
+  background: var(--color-bg-content);
+  min-height: calc(100vh - 64px); // Ajusta según la altura del header
+}
+
+.dashboard-page h1 {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+}
+
+.energy-chart {
+  width: 100%;
+  max-width: 1200px;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.energy-chart h2 {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+
+.energy-chart canvas {
+  width: 100% !important;
+  height: 400px !important;
+}
+

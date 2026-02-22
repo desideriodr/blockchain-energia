@@ -1,0 +1,92 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+  background-color: #f7f9fc;
+  min-height: 100vh;
+}
+
+/* =============================
+   TITLE
+============================= */
+
+.page-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* =============================
+   CARD
+============================= */
+
+.card {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* =============================
+   KPI SECTION
+============================= */
+
+.kpi-section {
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+/* =============================
+   TABLE
+============================= */
+
+.table-section {
+  margin-top: 1rem;
+}
+
+.production-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.production-table th,
+.production-table td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.production-table th {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.production-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.production-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* =============================
+   DIVIDER
+============================= */
+
+.divider {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #eee;
+}

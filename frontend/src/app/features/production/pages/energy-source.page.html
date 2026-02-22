@@ -1,0 +1,79 @@
+<h2 class="page-title">Mis fuentes de energía</h2>
+
+<section class="card">
+
+  <!-- CREATE -->
+  <form class="form" (ngSubmit)="createSource()">
+
+    <div class="form-group">
+      <label>Tipo de fuente</label>
+      <select [(ngModel)]="newSourceType" name="type" required>
+        <option *ngFor="let t of sourceTypes" [value]="t">
+          {{ t }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Capacidad (kWh)</label>
+      <input
+        type="number"
+        [(ngModel)]="newCapacity"
+        name="capacity"
+        min="1"
+        required
+      />
+    </div>
+
+    <button type="submit" class="btn-primary">
+      Agregar fuente
+    </button>
+
+  </form>
+
+  <hr class="divider" />
+
+  <!-- LIST -->
+  <table class="source-table">
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Capacidad</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let s of sources$ | async">
+        <td>{{ s.sourceType }}</td>
+        <td>{{ s.capacityKw }} kWh</td>
+        <td>
+          <span
+            class="status"
+            [class.active]="s.isActive"
+            [class.inactive]="!s.isActive"
+          >
+            {{ s.isActive ? 'Activa' : 'Inactiva' }}
+          </span>
+        </td>
+        <td class="actions">
+          <button
+            class="btn-secondary"
+            (click)="toggle(s.id)"
+          >
+            {{ s.isActive ? 'Desactivar' : 'Activar' }}
+          </button>
+
+          <button
+            class="btn-danger"
+            (click)="delete(s.id)"
+          >
+            Eliminar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+</section>

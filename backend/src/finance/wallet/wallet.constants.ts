@@ -1,0 +1,1 @@
+export const SYSTEM_WALLET_ADDRESS = '0xSYSTEM';

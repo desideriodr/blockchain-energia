@@ -1,0 +1,102 @@
+<header class="page-header">
+  <h1 class="page-title">Mi Wallet</h1>
+</header>
+
+<main class="wallet-page">
+  <ng-container *ngIf="wallet$ | async as wallet; else loading">
+
+    <!-- =============================
+         BALANCE CARD
+    ============================== -->
+
+    <section class="card balance-card">
+      <div class="balance-content">
+        <div class="wallet-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+            <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5">
+              <path stroke-linecap="square"
+                d="M3 8.5h12c2.828 0 4.243 0 5.121.879c.879.878.879 2.293.879 5.121v1c0 2.828 0 4.243-.879 5.121c-.878.879-2.293.879-5.121.879H9c-2.828 0-4.243 0-5.121-.879C3 19.743 3 18.328 3 15.5z" />
+              <path stroke-linecap="round"
+                d="M15 8.498V4.11a1.61 1.61 0 0 0-2.347-1.432L3.763 7.25A1.4 1.4 0 0 0 3 8.5" />
+            </g>
+          </svg></div>
+        <div>
+          <div class="balance-label">Balance disponible</div>
+          <div class="balance-value">
+            {{ wallet.balanceCop | number:'1.2-2' }} COP
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================
+         ACTIONS
+    ============================== -->
+
+    <section class="card">
+      <h3 class="section-title">Operaciones</h3>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Recargar COP</label>
+          <input type="number" [(ngModel)]="depositAmount" />
+          <button class="btn-primary" (click)="depositCop()">
+            Recargar
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Retirar COP</label>
+          <input type="number" [(ngModel)]="withdrawAmount" />
+          <button class="btn-danger" (click)="withdrawCop()">
+            Retirar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============================
+         TRANSACTION HISTORY
+    ============================== -->
+
+    <section class="card">
+      <h3 class="section-title">Histórico de movimientos</h3>
+
+      <table class="transactions-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Monto bruto (COP)</th>
+            <th>Tarifa (COP)</th>
+            <th>Monto (COP)</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let tx of transactions$ | async">
+            <td class="type">{{ tx.type }}</td>
+            <td class="mono">
+              {{ tx.grossAmountCop | number:'1.2-2' }}
+            </td>
+            <td class="mono">
+              {{ tx.feeCOP | number:'1.2-2' }}
+            </td>
+            <td class="mono">
+              {{ tx.amountCop | number:'1.2-2' }}
+            </td>
+            <td>
+              {{ tx.createdAt | date:'short' }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </ng-container>
+
+  <ng-template #loading>
+    <div class="loading">
+      Cargando wallet...
+    </div>
+  </ng-template>
+</main>

@@ -1,0 +1,31 @@
+name: Local Config
+version: 1.0.0
+schema: v1
+
+contextProviders:
+  - provider: code
+  - provider: docs
+
+models:
+  - name: Qwen2.5-Coder 7B (Chat)
+    provider: ollama
+    model: qwen2.5-coder:7b
+    roles:
+      - chat
+      - edit
+      - apply
+  - name: Qwen2.5-Coder 3B (Auto)
+    provider: ollama
+    model: qwen2.5-coder:3b
+    roles:
+      - autocomplete
+  - name: Nomic Embed
+    provider: ollama
+    model: nomic-embed-text:latest
+    roles:
+      - embed
+  - name: Ollama Reranker
+    provider: ollama
+    model: qllama/bge-reranker-v2-m3
+    roles:
+      - rerank

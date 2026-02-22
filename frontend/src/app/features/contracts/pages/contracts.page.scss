@@ -1,0 +1,79 @@
+.page-header {
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: 2rem;
+    margin: 0;
+  }
+
+  p {
+    font-size: 1rem;
+    color: #666;
+  }
+}
+
+.contracts.card {
+  padding: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      font-weight: 600;
+    }
+
+    .mono {
+      font-family: monospace;
+    }
+
+    tr.row {
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    tr.row:hover {
+      background-color: #f5f7fa;
+    }
+
+    tr.row.active {
+      background-color: #eef4ff;
+    }
+  }
+}
+
+/* Detalle inline */
+app-contract-detail-inline {
+  display: block;
+  margin-top: 8px;
+  padding: 16px;
+  background: #fafafa;
+  border-left: 4px solid #3b82f6;
+  border-radius: 4px;
+}
+
+.detail-row {
+  animation: expand 180ms ease-out;
+}
+
+@keyframes expand {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

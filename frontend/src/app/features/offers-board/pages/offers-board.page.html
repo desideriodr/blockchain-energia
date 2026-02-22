@@ -1,0 +1,83 @@
+<header class="page-header">
+  <h1 class="page-title">Oferta Energética</h1>
+  <p class="page-subtitle">Contratación de energía renovable</p>
+</header>
+
+<!-- =============================
+     Formulario para crear la oferta
+============================= -->
+
+<section class="card create-offer">
+  <h3 class="section-title">Publicar oferta</h3>
+
+  <div class="form-row">
+
+    <div class="form-group">
+      <label>Precio por kWh (Cop)</label>
+      <input type="number" [(ngModel)]="pricePerKwhCop" />
+    </div>
+
+    <button class="btn-primary" (click)="createOffer()" [disabled]="loading">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="currentColor"
+          d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h9v2H5v14h14v-9h2v9q0 .825-.587 1.413T19 21zm3-4v-2h8v2zm0-3v-2h8v2zm0-3V9h8v2zm9-2V7h-2V5h2V3h2v2h2v2h-2v2z" />
+      </svg> Publicar
+    </button>
+
+  </div>
+</section>
+
+<!-- =============================
+     Tabla con el listado de ofertas disponibles
+============================= -->
+
+<section class="card offers">
+  <h3 class="section-title">Ofertas disponibles</h3>
+
+  <table class="offers-table">
+    <thead>
+      <tr>
+        <th>Vendedor</th>
+        <th>Precio / kWh (Cop)</th>
+        <th>Estado</th>
+        <th>Fecha creación</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let offer of offers$ | async">
+        <td class="mono">
+          {{ offer.seller.nombres }}
+          {{ offer.seller.apellidos }}
+        </td>
+        <td class="mono">{{ offer.pricePerKwhCop }}</td>
+        <td class="mono">{{ offer.createdAt }}</td>
+        <td>
+          <span class="status" [class.open]="offer.status === 'OPEN'" [class.closed]="offer.status !== 'OPEN'">
+            {{ offer.status }}
+          </span>
+        </td>
+        <td class="contract-cell">
+          <button class="btn-secondary" (click)="contract(offer)" [disabled]="loading || offer.status !== 'OPEN'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                <path
+                  d="M18 6c-.047-1.553-.22-2.48-.862-3.121C16.258 2 14.842 2 12.01 2H8.007c-2.832 0-4.248 0-5.127.879C2 3.757 2 5.172 2 8v8c0 2.828 0 4.243.88 5.121S5.175 22 8.007 22h4.004c2.831 0 4.247 0 5.127-.879c.642-.641.815-1.567.862-3.121" />
+                <path
+                  d="m20.242 11.742l1.177-1.177c.27-.27.406-.406.478-.552a1 1 0 0 0 0-.88c-.072-.146-.208-.282-.478-.552s-.406-.406-.552-.478a1 1 0 0 0-.88 0c-.146.072-.281.208-.552.478l-1.177 1.177m1.984 1.984l-5.266 5.266L12 18l.992-2.976l5.266-5.266m1.984 1.984l-1.984-1.984M5 19h1l1.25-2.5L8.5 19h1M6 6h8m-8 4h6" />
+              </g>
+            </svg> Contratar
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pagination">
+    <button class="btn-secondary" (click)="prevPage()">◀</button>
+    <span>Página {{ page }}</span>
+    <button class="btn-secondary" (click)="nextPage()">▶</button>
+  </div>
+
+</section>

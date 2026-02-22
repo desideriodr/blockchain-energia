@@ -1,0 +1,40 @@
+<ng-container *ngIf="contract$ | async as contract; else loading">
+
+  <div class="detail-wrapper">
+
+    <div class="summary">
+      <div><strong>ID:</strong> {{ contract.id }}</div>
+    </div>
+
+    <h4>Consumos</h4>
+
+    <!-- Sin consumos -->
+    <div *ngIf="!contract.consumptions?.length" class="empty">
+      No hay consumos registrados
+    </div>
+
+    <!-- Tabla -->
+    <table *ngIf="contract.consumptions?.length" class="consumptions-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>kWh consumidos</th>
+          <th>Costo (Cop)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of contract.consumptions">
+          <td>{{ c.recordedAt | date:'short' }}</td>
+          <td>{{ c.energyKwhConsumed }}</td>
+          <td class="mono">{{ c.costCop }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+</ng-container>
+
+<ng-template #loading>
+  <p class="loading">Cargando detalle del contrato…</p>
+</ng-template>

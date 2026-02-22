@@ -1,0 +1,56 @@
+.detail-wrapper {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+h4 {
+  margin: 0.5rem 0;
+}
+
+.consumptions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    background: #f1f1f1;
+  }
+
+  tr:hover {
+    background: #f9f9f9;
+  }
+}
+
+.mono {
+  font-family: monospace;
+}
+
+.empty {
+  font-style: italic;
+  color: #777;
+}
+
+.loading {
+  padding: 1rem;
+  font-style: italic;
+  color: #666;
+}

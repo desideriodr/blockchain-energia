@@ -1,0 +1,5 @@
+<div class="dashboard-content" *ngIf="dashboardHome$ | async as home">
+    <app-kpi-cards [kpis]="home.kpis"></app-kpi-cards>
+    <app-energy-chart [seriesData]="home.energySeries"></app-energy-chart>
+    <app-transactions-chart [seriesData]="home.transactionSeries"></app-transactions-chart>
+</div>

@@ -1,0 +1,40 @@
+<h2 class="page-title">Producción de energía</h2>
+
+<div class="card" *ngIf="dashboard$ | async as dashboard">
+
+  <!-- KPI -->
+  <div class="kpi-section">
+    <h3 class="section-title">Energía almacenada</h3>
+    <div class="kpi-value">
+      {{ dashboard.energyStored }} kWh
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- TABLE -->
+  <div class="table-section">
+    <h3 class="section-title">Fuentes activas</h3>
+
+    <table class="production-table">
+      <thead>
+        <tr>
+          <th>Fuente</th>
+          <th>Capacidad (kW)</th>
+          <th>Producción hoy (kWh)</th>
+          <th>Producción total (kWh)</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let s of dashboard.sources">
+          <td>{{ s.sourceType }}</td>
+          <td>{{ s.capacityKw }}</td>
+          <td>{{ s.producedToday }}</td>
+          <td>{{ s.producedTotal }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>

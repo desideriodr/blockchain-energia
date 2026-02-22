@@ -1,0 +1,173 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+  background-color: #f7f9fc;
+  min-height: 100vh;
+}
+
+/* =============================
+   TITLE
+============================= */
+
+.page-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* =============================
+   CARD
+============================= */
+
+.card {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* =============================
+   FORM
+============================= */
+
+.form {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 200px;
+}
+
+label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+}
+
+input,
+select {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border 0.2s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* =============================
+   BUTTONS
+============================= */
+
+button {
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+/* =============================
+   TABLE
+============================= */
+
+.source-table {
+  width: 100%;
+  margin-top: 1.5rem;
+  border-collapse: collapse;
+}
+
+.source-table th,
+.source-table td {
+  padding: 0.8rem;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.source-table th {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.source-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.source-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* =============================
+   STATUS BADGE
+============================= */
+
+.status {
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status.inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* =============================
+   ACTIONS
+============================= */
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.divider {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid #eee;
+}

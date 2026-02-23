@@ -212,4 +212,95 @@ export class EnergyContractService {
     }
   }
 
+  // cancelacion voluntaria de contrato
+  async cancelContract(
+    contractId: string,
+    userId: string,
+  ): Promise<EnergyContract> {
+
+    // 1️⃣ Buscar contrato con relaciones
+    const contract = await this.contractRepo.findOne({
+      where: { id: contractId },
+      relations: [
+        'buyerWallet',
+        'buyerWallet.user',
+        'sellerWallet',
+        'sellerWallet.user',
+      ],
+    });
+
+    if (!contract) {
+      throw new BadRequestException('Contrato no encontrado');
+    }
+
+    // 2️⃣ Validar pertenencia
+    const isBuyer = contract.buyerWallet.user.id === userId;
+    const isSeller = contract.sellerWallet.user.id === userId;
+
+    if (!isBuyer && !isSeller) {
+      throw new BadRequestException('No autorizado');
+    }
+
+    // 3️⃣ Validar estado
+    if (contract.status !== ContractStatus.ACTIVE) {
+      throw new BadRequestException(
+        'Solo contratos activos pueden cancelarse',
+      );
+    }
+
+    if (!contract.contractAddress) {
+      throw new BadRequestException(
+        'Contrato no tiene dirección blockchain',
+      );
+    }
+
+    // 4️⃣ Determinar nuevo estado según actor
+    const newStatus = isBuyer
+      ? ContractStatus.CANCELED_BY_BUYER
+      : ContractStatus.CANCELED_BY_SELLER;
+
+    try {
+      // 5️⃣ Cancelar en blockchain
+      await this.blockchainService.cancelContract(
+        contract.contractAddress,
+      );
+
+      // 6️⃣ Actualizar BD
+      await this.contractRepo.update(
+        { id: contract.id },
+        {
+          status: newStatus,
+          isActive: false,
+        },
+      );
+
+      // 7️⃣ Reconsultar contrato actualizado
+      const updatedContract = await this.contractRepo.findOne({
+        where: { id: contract.id },
+        relations: [
+          'buyerWallet',
+          'buyerWallet.user',
+          'sellerWallet',
+          'sellerWallet.user',
+        ],
+      });
+
+      if (!updatedContract) {
+        throw new InternalServerErrorException(
+          'Contrato no encontrado después de actualizar',
+        );
+      }
+
+      return updatedContract;
+
+    } catch (error: any) {
+      console.error('Blockchain cancel error:', error);
+
+      throw new InternalServerErrorException(
+        error?.reason ||
+        error?.message ||
+        'Falló cancelación en blockchain',
+      );
+    }
+  }
 }

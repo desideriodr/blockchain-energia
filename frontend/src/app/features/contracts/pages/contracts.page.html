@@ -17,21 +17,22 @@
       <ng-container *ngFor="let contract of contracts">
 
         <!-- FILA PRINCIPAL -->
-        <tr
-          class="row"
-          (click)="toggle(contract.id)"
-          [class.active]="contract.id === selectedContractId"
-        >
+        <tr class="row" (click)="toggle(contract.id)" [class.active]="contract.id === selectedContractId">
           <td class="mono">{{ getFullName(contract.seller) }}</td>
           <td class="mono">{{ getFullName(contract.buyer) }}</td>
           <td class="mono">{{ contract.pricePerKwhCop }}</td>
+          <td><button (click)="cancel(contract.id)" [disabled]="loading || contract.status !== 'ACTIVE'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0m15.364-6.364L5.636 18.364" />
+              </svg>Cancelar
+            </button></td>
         </tr>
 
         <!-- DETALLE INLINE -->
         <tr *ngIf="contract.id === selectedContractId" class="detail-row">
           <td colspan="5">
-            <app-contract-detail-inline
-              [contractId]="selectedContractId!">
+            <app-contract-detail-inline [contractId]="selectedContractId!">
             </app-contract-detail-inline>
           </td>
         </tr>

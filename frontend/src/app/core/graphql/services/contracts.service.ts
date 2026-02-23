@@ -5,8 +5,9 @@ import { filter, map, Observable } from 'rxjs';
 import { GET_CONTRACTS } from '../queries/get-contracts.query';
 import { GET_CONTRACT_BY_ID } from '../queries/get-contract-by-id.query';
 
-import { EnergyContract, Wallet, User } from '../models/energy-contract.model';
-import { EnergyConsumption } from '../models/energy-consumption.model';
+import { EnergyContract } from '../models/energy-contract.model';
+
+import { CANCEL_CONTRACT_MUTATION } from '../mutations/cancel-contract.mutation';
 
 @Injectable({ providedIn: 'root' })
 export class ContractsService {
@@ -46,5 +47,15 @@ export class ContractsService {
           return res.data.energyContract;
         })
       );
+  }
+
+  /* Cancelacion voluntaria de contrato */
+  cancelContract(contractId: string) {
+    return this.apollo.mutate({
+      mutation: CANCEL_CONTRACT_MUTATION,
+      variables: {
+        contractId,
+      },
+    });
   }
 }

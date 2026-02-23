@@ -8,6 +8,7 @@ import { GqlAuthGuard } from '../../auth/gql-auth.guard';
 import { ContractEnergyInput } from './graphql/inputs/contract-energy.input';
 import { EnergyConsumptionGQL } from 'energy/energy-consumption/graphql/energy-consumption.graphql';
 import { UserContractsGQL } from './graphql/user-contracts.graphql';
+import { CurrentUser } from 'auth/current-user.decorator';
 
 
 @Resolver(() => EnergyContractGQL)
@@ -107,9 +108,9 @@ export class EnergyContractResolver {
 
       buyer: {
 
-          id: contract.buyerWallet.user.id,
-          nombres: contract.buyerWallet.user.nombres,
-          apellidos: contract.buyerWallet.user.apellidos,
+        id: contract.buyerWallet.user.id,
+        nombres: contract.buyerWallet.user.nombres,
+        apellidos: contract.buyerWallet.user.apellidos,
 
       },
 
@@ -141,5 +142,17 @@ export class EnergyContractResolver {
     }
 
     return this.toGQL(contract);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => EnergyContractGQL)
+  async cancelContract(
+    @Args('contractId') contractId: string,
+    @CurrentUser() user: any,
+  ): Promise<EnergyContract> {
+    return this.service.cancelContract(
+      contractId,
+      user.id,
+    );
   }
 }

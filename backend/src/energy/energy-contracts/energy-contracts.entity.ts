@@ -9,6 +9,7 @@ export enum ContractStatus {
     TERMINATED_INSUFFICIENT_FUNDS = 'TERMINATED_INSUFFICIENT_FUNDS',
     TERMINATED_NO_PRODUCTION = 'TERMINATED_NO_PRODUCTION',
     CANCELED_BY_BUYER = 'CANCELED_BY_BUYER',
+    CANCELED_BY_SELLER = 'CANCELED_BY_SELLER',
     EXPIRED = 'EXPIRED',
     COMPLETED = 'COMPLETED',
 }
@@ -21,7 +22,7 @@ export class EnergyContract {
     @Column()
     offerId: string; // referencia histórica
 
-    @Column({ nullable: true })
+    @Column({ unique: true, nullable: true })
     contractAddress: string;
 
     @Column('decimal', { precision: 18, scale: 0 })

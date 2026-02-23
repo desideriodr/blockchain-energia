@@ -6,7 +6,8 @@ contract EnergySupplyContract {
         CREATED,
         ACTIVE,
         COMPLETED,
-        TERMINATED
+        TERMINATED,
+        CANCELED
     }
 
     address public buyer;
@@ -49,7 +50,7 @@ contract EnergySupplyContract {
         buyer = _buyer;
         seller = _seller;
         oracle = _oracle;
-        
+
         pricePerKwhCop = _pricePerKwhCop;
         startTimestamp = _startTimestamp;
         endTimestamp = _endTimestamp;
@@ -72,6 +73,11 @@ contract EnergySupplyContract {
     function complete() external onlyOracle inState(ContractState.ACTIVE) {
         state = ContractState.COMPLETED;
         emit ContractCompleted(consumedKwh);
+    }
+
+    function cancel() external onlyOracle inState(ContractState.ACTIVE) {
+        state = ContractState.CANCELED;
+        emit ContractCancelled();
     }
 
     function terminate() external onlyOracle inState(ContractState.ACTIVE) {

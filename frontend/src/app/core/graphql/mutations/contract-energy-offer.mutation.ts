@@ -9,16 +9,20 @@ export const CONTRACT_OFFER = gql`
       startDate
       endDate
 
-      seller {
-        id
-        nombres
-        apellidos
+      sellerWallet {
+        user {
+          id
+          nombres
+          apellidos
+        }
       }
 
-      buyer {
-        id
-        nombres
-        apellidos
+      buyerWallet {
+        user {
+          id
+          nombres
+          apellidos
+        }  
       }
     }
   }

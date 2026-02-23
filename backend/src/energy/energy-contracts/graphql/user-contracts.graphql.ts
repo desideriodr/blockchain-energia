@@ -1,20 +1,20 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { ContractStatus } from './dto/energy-contract.enums';
 import { EnergyConsumptionGQL } from 'energy/energy-consumption/graphql/energy-consumption.graphql';
-import { WalletUserGQL } from 'finance/wallet/graphql/wallet-user.graphql';
+import { UserGQL } from 'users/graphql/user.type';
 
 
 @ObjectType()
-export class EnergyContractGQL {
+export class UserContractsGQL {
 
   @Field(() => ID)
   id: string;
 
-  @Field(() => WalletUserGQL)
-  sellerWallet: WalletUserGQL;
+  @Field(() => UserGQL)
+  seller: UserGQL;
 
-  @Field(() => WalletUserGQL)
-  buyerWallet: WalletUserGQL;
+  @Field(() => UserGQL)
+  buyer: UserGQL;
 
   @Field({ nullable: true })
   contractAddress?: string;

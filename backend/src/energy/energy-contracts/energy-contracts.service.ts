@@ -3,7 +3,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Decimal } from 'decimal.js';
 
 import {
@@ -102,6 +102,26 @@ export class EnergyContractService {
     });
   }
 
+  private async findContractWithRelations(
+    manager: EntityManager,
+    id: string,
+  ): Promise<EnergyContract> {
+    const contract = await manager.findOne(EnergyContract, {
+      where: { id },
+      relations: [
+        'sellerWallet',
+        'sellerWallet.user',
+        'buyerWallet',
+        'buyerWallet.user',
+      ],
+    });
+
+    if (!contract) {
+      throw new Error('Contract not found');
+    }
+
+    return contract;
+  }
 
   async contractOffer(
     userId: string,
@@ -111,49 +131,49 @@ export class EnergyContractService {
     // ===============================
     // 1️⃣ TRANSACCIÓN DB
     // ===============================
-    const { contract, buyerWallet, sellerWallet } =
-      await this.dataSource.transaction(async manager => {
+    const contract = await this.dataSource.transaction(async manager => {
 
-        const offer = await manager.findOne(EnergyOffer, {
-          where: { id: offerId },
-          lock: { mode: 'pessimistic_write' },
-        });
-
-        if (!offer || offer.status !== EnergyOfferStatus.OPEN) {
-          throw new BadRequestException('Oferta no disponible');
-        }
-
-        const sellerWallet = await manager.findOneOrFail(Wallet, {
-          where: { address: offer.sellerAddress },
-        });
-
-        const buyerWallet = await manager.findOneOrFail(Wallet, {
-          where: { user: { id: userId } },
-        });
-
-        if (buyerWallet.id === sellerWallet.id) {
-          throw new BadRequestException('No puedes contratar tu propia oferta');
-        }
-
-        const startDate = new Date();
-        const endDate = new Date(startDate);
-        endDate.setFullYear(endDate.getFullYear() + 1);
-
-        const contract = manager.create(EnergyContract, {
-          offerId: offer.id,
-          sellerWallet,
-          buyerWallet,
-          pricePerKwhCop: offer.pricePerKwhCop,
-          startDate,
-          endDate,
-          status: ContractStatus.PENDING_BLOCKCHAIN,
-          isActive: true,
-        });
-
-        await manager.save(contract);
-
-        return { contract, buyerWallet, sellerWallet };
+      const offer = await manager.findOne(EnergyOffer, {
+        where: { id: offerId },
+        lock: { mode: 'pessimistic_write' },
       });
+
+      if (!offer || offer.status !== EnergyOfferStatus.OPEN) {
+        throw new BadRequestException('Oferta no disponible');
+      }
+
+      const sellerWallet = await manager.findOneOrFail(Wallet, {
+        where: { address: offer.sellerAddress },
+      });
+
+      const buyerWallet = await manager.findOneOrFail(Wallet, {
+        where: { user: { id: userId } },
+      });
+
+      if (buyerWallet.id === sellerWallet.id) {
+        throw new BadRequestException('No puedes contratar tu propia oferta');
+      }
+
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 1);
+
+      const contract = manager.create(EnergyContract, {
+        offerId: offer.id,
+        sellerWallet,
+        buyerWallet,
+        pricePerKwhCop: offer.pricePerKwhCop,
+        startDate,
+        endDate,
+        status: ContractStatus.PENDING_BLOCKCHAIN,
+        isActive: true,
+      });
+
+      await manager.save(contract);
+
+      // 👇 devolvemos contrato completamente hidratado
+      return this.findContractWithRelations(manager, contract.id);
+    });
 
     // ===============================
     // 2️⃣ BLOCKCHAIN
@@ -163,8 +183,8 @@ export class EnergyContractService {
 
       const deployedAddress =
         await this.blockchainService.deployEnergyContract(
-          buyerWallet.address,
-          sellerWallet.address,
+          contract.buyerWallet.address,
+          contract.sellerWallet.address,
           contract.pricePerKwhCop,
           contract.startDate.getTime(),
           contract.endDate.getTime(),

@@ -1,8 +1,8 @@
 import { gql } from 'apollo-angular';
 
-export const GET_MY_CONTRACTS = gql`
-  query MyEnergyContracts {
-  myEnergyContracts {
+export const GET_CONTRACTS = gql`
+  query GetEnergyContracts {
+  getEnergyContracts {
     id
     status
     startDate

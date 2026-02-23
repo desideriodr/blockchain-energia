@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo } from 'apollo-angular';
 import { filter, map, Observable } from 'rxjs';
 
-import { GET_MY_CONTRACTS } from '../queries/get-my-contracts.query';
+import { GET_CONTRACTS } from '../queries/get-contracts.query';
 import { GET_CONTRACT_BY_ID } from '../queries/get-contract-by-id.query';
 
 import { EnergyContract, Wallet, User } from '../models/energy-contract.model';
@@ -13,14 +13,14 @@ export class ContractsService {
   constructor(private apollo: Apollo) { }
 
   /** Obtener los contratos del usuario y mapear buyer/seller desde los wallets */
-  getMyContracts(): Observable<EnergyContract[]> {
+  getContracts(): Observable<EnergyContract[]> {
     return this.apollo
-      .watchQuery<{ myEnergyContracts: EnergyContract[] }>({
-        query: GET_MY_CONTRACTS,
+      .watchQuery<{ getEnergyContracts: EnergyContract[] }>({
+        query: GET_CONTRACTS,
         pollInterval: 5000,
       })
       .valueChanges.pipe(
-        map(res => res.data?.myEnergyContracts ?? []),
+        map(res => res.data?.getEnergyContracts ?? []),
         map(contracts => contracts.filter((c): c is EnergyContract => c !== undefined)))
   }
 

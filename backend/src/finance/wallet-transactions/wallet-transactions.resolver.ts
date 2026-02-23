@@ -8,7 +8,7 @@ import { Wallet } from '../wallet/wallet.entity';
 import { GqlAuthGuard } from '../../auth/gql-auth.guard';
 
 import { WalletTransactionGQL } from './graphql/wallet-transactions.graphql';
-import { WalletGQL } from '../wallet/graphql/wallet.type';
+import { WalletGQL } from '../wallet/graphql/wallet.graphql';
 import { TimeSeriesPoint } from 'application/dashboard/graphql/time-series.graphql';
 import { MeSummary } from 'application/dashboard/graphql/me-summary.graphql';
 import { TxType } from './graphql/dto/wallet-transaction.enums';

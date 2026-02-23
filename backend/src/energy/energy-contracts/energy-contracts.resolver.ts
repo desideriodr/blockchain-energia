@@ -7,7 +7,8 @@ import { EnergyContract } from './energy-contracts.entity';
 import { GqlAuthGuard } from '../../auth/gql-auth.guard';
 import { ContractEnergyInput } from './graphql/inputs/contract-energy.input';
 import { EnergyConsumptionGQL } from 'energy/energy-consumption/graphql/energy-consumption.graphql';
-import { User } from 'users/user.entity';
+import { UserContractsGQL } from './graphql/user-contracts.graphql';
+
 
 @Resolver(() => EnergyContractGQL)
 export class EnergyContractResolver {
@@ -34,29 +35,39 @@ export class EnergyContractResolver {
     const userId = ctx.req.user.id;
 
     const contract = await this.service.contractOffer(userId, input.offerId);
+    console.log('Searching contract with id:', contract.id, 'Found:', contract); // temporal para depurar
     if (!contract) {
       throw new Error('Service returned undefined');
     }
     return this.toGQL(contract);
   }
 
-  /**
-   * Mapper Entidad → DTO GraphQL
-   */
   private toGQL(contract: EnergyContract): EnergyContractGQL {
     return {
       id: contract.id,
 
-      seller: {
-        id: contract.sellerWallet.user.id,
-        nombres: contract.sellerWallet.user.nombres,
-        apellidos: contract.sellerWallet.user.apellidos,
+      sellerWallet: {
+        address: contract.sellerWallet.address,
+        balanceCop: Number(contract.sellerWallet.balanceCop),
+        energyStored: Number(contract.sellerWallet.energyStored),
+
+        user: {
+          id: contract.sellerWallet.user.id,
+          nombres: contract.sellerWallet.user.nombres,
+          apellidos: contract.sellerWallet.user.apellidos,
+        },
       },
 
-      buyer: {
-        id: contract.buyerWallet.user.id,
-        nombres: contract.buyerWallet.user.nombres,
-        apellidos: contract.buyerWallet.user.apellidos,
+      buyerWallet: {
+        address: contract.buyerWallet.address,
+        balanceCop: Number(contract.buyerWallet.balanceCop),
+        energyStored: Number(contract.buyerWallet.energyStored),
+
+        user: {
+          id: contract.buyerWallet.user.id,
+          nombres: contract.buyerWallet.user.nombres,
+          apellidos: contract.buyerWallet.user.apellidos,
+        },
       },
 
       contractAddress: contract.contractAddress ?? null,
@@ -74,13 +85,45 @@ export class EnergyContractResolver {
 
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [EnergyContractGQL])
-  async myEnergyContracts(@Context() ctx): Promise<EnergyContractGQL[]> {
+  @Query(() => [UserContractsGQL])
+  async getEnergyContracts(@Context() ctx): Promise<UserContractsGQL[]> {
     const userId = ctx.req.user.id;
 
     const contracts = await this.service.findContractsByUser(userId);
 
-    return contracts.map(contract => this.toGQL(contract));
+    return contracts.map(contract => this.toUserContractsGQL(contract));
+  }
+
+  private toUserContractsGQL(contract: EnergyContract): UserContractsGQL {
+    return {
+      id: contract.id,
+
+      seller: {
+
+        id: contract.sellerWallet.user.id,
+        nombres: contract.sellerWallet.user.nombres,
+        apellidos: contract.sellerWallet.user.apellidos,
+      },
+
+      buyer: {
+
+          id: contract.buyerWallet.user.id,
+          nombres: contract.buyerWallet.user.nombres,
+          apellidos: contract.buyerWallet.user.apellidos,
+
+      },
+
+      contractAddress: contract.contractAddress ?? null,
+
+      pricePerKwhCop: contract.pricePerKwhCop,
+
+      status: contract.status,
+
+      startDate: contract.startDate,
+      endDate: contract.endDate,
+
+      isActive: contract.isActive,
+    };
   }
 
   @UseGuards(GqlAuthGuard)

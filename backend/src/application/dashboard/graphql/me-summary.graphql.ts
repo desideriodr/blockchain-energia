@@ -1,5 +1,6 @@
 import { ObjectType, Field, ID } from '@nestjs/graphql';
-import { WalletGQL } from 'finance/wallet/graphql/wallet.type';
+import { WalletSummaryGQL } from 'finance/wallet/graphql/wallet-summary.graphql';
+
 
 @ObjectType()
 export class MeSummary {
@@ -18,6 +19,6 @@ export class MeSummary {
   @Field()
   role: string;
 
-  @Field(() => WalletGQL)
-  wallet: WalletGQL;
+  @Field(() => WalletSummaryGQL)
+  wallet: WalletSummaryGQL;
 }

@@ -10,5 +10,5 @@ export class WalletGQL {
 
   @Field(() => Float)
   energyStored: number;
-  
+
 }

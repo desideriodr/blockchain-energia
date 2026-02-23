@@ -5,7 +5,7 @@ import { WalletService } from './wallet.service';
 import { Wallet } from './wallet.entity';
 import { GqlAuthGuard } from '../../auth/gql-auth.guard';
 
-import { WalletGQL } from './graphql/wallet.type';
+import { WalletGQL } from './graphql/wallet.graphql';
 
 @Resolver(() => WalletGQL)
 export class WalletResolver {

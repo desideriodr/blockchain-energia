@@ -31,7 +31,7 @@ export class ContractsPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.contracts$ = this.contractsService.getMyContracts();
+    this.contracts$ = this.contractsService.getContracts();
   }
 
   /** abre / cierra el detalle inline */

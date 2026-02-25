@@ -4,11 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Decimal } from 'decimal.js';
 
-import { EnergySource } from '../../energy/energy-source/energy-source.entity';
+import { EnergySource } from 'energy/energy-source/energy-source.entity';
 import { EnergyProduction } from 'energy/energy-production/energy-production.entity';
-import { Wallet } from '../wallet/wallet.entity';
-import { EnergyContract, ContractStatus } from '../../energy/energy-contracts/energy-contracts.entity';
-import { EnergyConsumptionService } from '../../energy/energy-consumption/energy-consumption.service';
+import { Wallet } from 'finance/wallet/wallet.entity';
+import { EnergyContract, ContractStatus } from 'energy/energy-contracts/energy-contracts.entity';
+import { EnergyConsumptionService } from 'energy/energy-consumption/energy-consumption.service';
 
 @Injectable()
 export class EnergySimulationService {
@@ -101,65 +101,48 @@ export class EnergySimulationService {
   // cada 5 minuto
   @Cron('*/5 * * * *')
   async simulateConsumption() {
-
     const now = new Date();
 
+    // 🔹 Traemos solo IDs y fechas de contratos activos
     const contracts = await this.contractRepo.find({
-      where: {
-        status: ContractStatus.ACTIVE,
-        isActive: true,
-      },
-      relations: ['sellerWallet'],
+      where: { status: ContractStatus.ACTIVE, isActive: true },
+      select: ['id', 'endDate'],
     });
 
     for (const contract of contracts) {
 
-      // 🔹 Si venció, dejar que el service lo cierre
+      // 🔹 Si venció, dejamos que reportConsumption cierre el contrato
       if (now > contract.endDate) {
-        try {
-          await this.consumptionService.reportConsumption(
-            contract.id,
-            0,
-          );
-        } catch (e) {
-          this.logger.warn(`Error cerrando contrato ${contract.id}`);
-        }
+        // Sin try/catch, se verá el error real
+        await this.consumptionService.reportConsumption(contract.id, 0);
         continue;
       }
 
+      // 🔹 Calcular consumo según tu lógica
       const kwhToConsume = this.calculateConsumption(contract);
-
       if (kwhToConsume.lte(0)) continue;
 
-      try {
-        await this.consumptionService.reportConsumption(
-          contract.id,
-          kwhToConsume.toNumber(),
-        );
-      } catch (error) {
-        this.logger.warn(
-          `Error consumiendo contrato ${contract.id}: ${error.message}`,
-        );
-      }
+      await this.consumptionService.reportConsumption(
+        contract.id,
+        kwhToConsume.toNumber(),
+      );
     }
   }
 
-
   private calculateConsumption(contract: EnergyContract): Decimal {
-  /**
-   * Regla EaaS:
-   * - hasta 1 kWh por tick (5 min)
-   * - consumo variable
-   * - no depende del contrato
-   */
+    /**
+     * Regla EaaS:
+     * - hasta 1 kWh por tick (5 min)
+     * - consumo variable
+     * - no depende del contrato
+     */
 
-  const MAX_KWH_PER_TICK = new Decimal(1);
+    const MAX_KWH_PER_TICK = new Decimal(1);
 
-  const randomFactor = new Decimal(Math.random()); // 0 - 1
+    const randomFactor = new Decimal(Math.random()); // 0 - 1
 
-  return MAX_KWH_PER_TICK
-    .mul(randomFactor)
-    .toDecimalPlaces(4);
-}
-
+    return MAX_KWH_PER_TICK
+      .mul(randomFactor)
+      .toDecimalPlaces(4);
+  }
 }

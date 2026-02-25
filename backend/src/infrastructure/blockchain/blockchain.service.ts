@@ -1,14 +1,20 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ethers, NonceManager } from 'ethers';
+import { ethers, NonceManager, parseUnits } from 'ethers';
 import * as energyArtifact from '../../../../smart-contracts/artifacts/contracts/EnergySupplyContract.sol/EnergySupplyContract.json';
-
-// ollama pull sam860/qwen3-reranker:0.6b
-
 
 @Injectable()
 export class BlockchainService implements OnModuleInit {
   private provider!: ethers.JsonRpcProvider;
-  private signer!: NonceManager; // Backend = ORACLE
+  private signer!: NonceManager;
+
+  private readonly stateEnumMap: Record<number, string> = {
+    0: 'CREATED',
+    1: 'ACTIVE',
+    2: 'SUSPENDED',
+    3: 'CANCELED',
+    4: 'TERMINATED',
+    5: 'COMPLETED',
+  };
 
   async onModuleInit() {
     const rpcUrl = process.env.BLOCKCHAIN_RPC;
@@ -19,14 +25,37 @@ export class BlockchainService implements OnModuleInit {
 
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
     const wallet = new ethers.Wallet(privateKey, this.provider);
-
     this.signer = new NonceManager(wallet);
 
     console.log('Blockchain connected');
     console.log('Oracle address:', await this.signer.getAddress());
   }
 
-  /* ================= DEPLOY ================= */
+  /* ========================================================= */
+  /*                      INTERNAL HELPER                      */
+  /* ========================================================= */
+
+  private getWriteContract(address: string) {
+    return new ethers.Contract(address, energyArtifact.abi, this.signer);
+  }
+
+  private getReadContract(address: string) {
+    return new ethers.Contract(address, energyArtifact.abi, this.provider);
+  }
+
+  private async execute(txFactory: () => Promise<any>): Promise<string> {
+    const tx = await txFactory();
+
+    if (!tx?.wait) {
+      throw new Error("Funcion no retorna una transacción.");
+    }
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
+  /* ========================================================= */
+  /*                          DEPLOY                           */
+  /* ========================================================= */
 
   async deployEnergyContract(
     buyer: string,
@@ -54,89 +83,84 @@ export class BlockchainService implements OnModuleInit {
     return await contract.getAddress();
   }
 
-  /* ================= LIFECYCLE ================= */
+  /* ========================================================= */
+  /*                      LIFECYCLE (WRITE)                    */
+  /* ========================================================= */
 
   async activateContract(contractAddress: string): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      energyArtifact.abi,
-      this.signer,
-    );
-
-    const tx = await contract.activate();
-    await tx.wait();
-
-    return tx.hash;
+    const contract = this.getWriteContract(contractAddress);
+    return this.execute(() => contract.activate());
   }
 
   async reportConsumption(
     contractAddress: string,
     kwh: string,
   ): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      energyArtifact.abi,
-      this.signer,
-    );
 
-    const tx = await contract.reportConsumption(BigInt(kwh));
-    await tx.wait();
+    const contract = this.getWriteContract(contractAddress);
+    const value = parseUnits(kwh, 4); // 4 Decimales
 
-    return tx.hash;
+    return this.execute(() => contract.reportConsumption(value));
   }
 
-  async cancelContract(contractAddress: string): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      energyArtifact.abi,
-      this.signer,
-    );
+  async suspendContract(
+    contractAddress: string,
+    reason: string,
+  ): Promise<string> {
+    if (!reason || reason.trim().length === 0) {
+      throw new Error('Suspension reason is required');
+    }
 
-    const tx = await contract.cancel();
-    await tx.wait();
+    const contract = this.getWriteContract(contractAddress);
+    return this.execute(() => contract.suspend(reason));
+  }
 
-    return tx.hash;
+  async resumeContract(contractAddress: string): Promise<string> {
+    const contract = this.getWriteContract(contractAddress);
+    return this.execute(() => contract.resume());
+  }
+
+  async cancelContract(
+    contractAddress: string,
+    reason: string,
+  ): Promise<string> {
+    if (!reason || reason.trim().length === 0) {
+      throw new Error('Cancellation reason is required');
+    }
+
+    const contract = this.getWriteContract(contractAddress);
+    return this.execute(() => contract.cancel(reason));
   }
 
   async completeContract(contractAddress: string): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      energyArtifact.abi,
-      this.signer,
-    );
-
-    const tx = await contract.complete();
-    await tx.wait();
-    return tx.hash;
+    const contract = this.getWriteContract(contractAddress);
+    return this.execute(() => contract.complete());
   }
 
-  async terminateContract(contractAddress: string): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      energyArtifact.abi,
-      this.signer,
-    );
-
-    const tx = await contract.terminate();
-    await tx.wait();
-    return tx.hash;
+  async terminateByExpiration(
+    contractAddress: string,
+  ): Promise<string> {
+    const contract = this.getWriteContract(contractAddress);
+    return this.execute(() => contract.terminateByExpiration());
   }
 
-  /* ================= READ ================= */
+  /* ========================================================= */
+  /*                          READ                             */
+  /* ========================================================= */
 
   async getContractState(contractAddress: string) {
-    const contract = new ethers.Contract(
-      contractAddress,
-      energyArtifact.abi,
-      this.provider,
-    );
+    const contract = this.getReadContract(contractAddress);
+
+    const rawState = Number(await contract.state());
 
     return {
       buyer: await contract.buyer(),
       seller: await contract.seller(),
       pricePerKwhCop: (await contract.pricePerKwhCop()).toString(),
       consumedKwh: (await contract.consumedKwh()).toString(),
-      state: Number(await contract.state()),
+      startTimestamp: (await contract.startTimestamp()).toString(),
+      endTimestamp: (await contract.endTimestamp()).toString(),
+      state: this.stateEnumMap[rawState] ?? rawState,
       totalAmountCop: (await contract.totalAmountCop()).toString(),
     };
   }

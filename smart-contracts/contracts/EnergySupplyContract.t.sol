@@ -10,9 +10,9 @@ contract EnergySupplyContractTest is Test {
 
     address buyer = address(0x1);
     address seller = address(0x2);
-    address oracle = address(this); // el test actúa como backend
+    address oracle = address(this);
 
-    uint256 pricePerKwh = 500; // 500 COP
+    uint256 pricePerKwh = 500;
 
     uint256 start;
     uint256 end;
@@ -67,12 +67,78 @@ contract EnergySupplyContractTest is Test {
     }
 
     /* ---------------------------------------------------------- */
+    /*                      SUSPEND / RESUME                      */
+    /* ---------------------------------------------------------- */
+
+    function testSuspendAndResume() public {
+        contractInstance.activate();
+
+        contractInstance.suspend("Fondos insuficientes");
+
+        assertEq(
+            uint(contractInstance.state()),
+            uint(EnergySupplyContract.ContractState.SUSPENDED)
+        );
+
+        assertEq(
+            contractInstance.suspensionReason(),
+            "Fondos insuficientes"
+        );
+
+        contractInstance.resume();
+
+        assertEq(
+            uint(contractInstance.state()),
+            uint(EnergySupplyContract.ContractState.ACTIVE)
+        );
+    }
+
+    /* ---------------------------------------------------------- */
+    /*                      CANCEL                                */
+    /* ---------------------------------------------------------- */
+
+    function testCancelActiveContract() public {
+        contractInstance.activate();
+
+        contractInstance.cancel("Cancelado por comprador");
+
+        assertEq(
+            uint(contractInstance.state()),
+            uint(EnergySupplyContract.ContractState.CANCELED)
+        );
+
+        assertEq(
+            contractInstance.terminationReason(),
+            "Cancelado por comprador"
+        );
+    }
+
+    /* ---------------------------------------------------------- */
+    /*                  TERMINATE BY EXPIRATION                   */
+    /* ---------------------------------------------------------- */
+
+    function testTerminateByExpiration() public {
+        contractInstance.activate();
+
+        // Simular paso del tiempo
+        vm.warp(end + 1);
+
+        contractInstance.terminateByExpiration();
+
+        assertEq(
+            uint(contractInstance.state()),
+            uint(EnergySupplyContract.ContractState.TERMINATED)
+        );
+    }
+
+    /* ---------------------------------------------------------- */
     /*                      COMPLETE                              */
     /* ---------------------------------------------------------- */
 
     function testCompleteContract() public {
         contractInstance.activate();
         contractInstance.reportConsumption(100);
+
         contractInstance.complete();
 
         assertEq(
@@ -84,26 +150,13 @@ contract EnergySupplyContractTest is Test {
     }
 
     /* ---------------------------------------------------------- */
-    /*                      TERMINATE                             */
-    /* ---------------------------------------------------------- */
-
-    function testTerminateActiveContract() public {
-        contractInstance.activate();
-        contractInstance.terminate();
-
-        assertEq(
-            uint(contractInstance.state()),
-            uint(EnergySupplyContract.ContractState.TERMINATED)
-        );
-    }
-
-    /* ---------------------------------------------------------- */
     /*                  REVERT CASES                              */
     /* ---------------------------------------------------------- */
 
-    function testRevertTerminateBeforeActivation() public {
+    function testRevertTerminateBeforeExpiration() public {
+        contractInstance.activate();
         vm.expectRevert();
-        contractInstance.terminate();
+        contractInstance.terminateByExpiration();
     }
 
     function testRevertActivateTwice() public {
@@ -117,8 +170,13 @@ contract EnergySupplyContractTest is Test {
         contractInstance.reportConsumption(10);
     }
 
-    function testRevertCompleteWithoutActivation() public {
+    function testRevertCancelBeforeActivation() public {
         vm.expectRevert();
-        contractInstance.complete();
+        contractInstance.cancel("motivo");
+    }
+
+    function testRevertSuspendBeforeActivation() public {
+        vm.expectRevert();
+        contractInstance.suspend("motivo");
     }
 }

@@ -1,3 +1,7 @@
+/* este script se ejecuta desde la terminal
+ * npx hardhat run scripts/replayEnergySupply.ts --network hardhatMainnet
+ */
+
 import hre from "hardhat";
 import { ethers } from "ethers";
 
@@ -8,97 +12,153 @@ async function main() {
   // 2️⃣ Leer artifact del contrato
   const artifact = await hre.artifacts.readArtifact("EnergySupplyContract");
   const abi = artifact.abi;
+  const iface = new ethers.Interface(abi);
 
-  // 3️⃣ Dirección del contrato desplegado
-  const contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3"; // reemplaza con tu dirección
-
-  const contract = new ethers.Contract(contractAddress, abi, provider);
-
-  // 4️⃣ Estado inicial del constructor
-  const initialState = {
-    buyer: await contract.buyer(),
-    seller: await contract.seller(),
-    oracle: await contract.oracle(),
-    pricePerKwhCop: (await contract.pricePerKwhCop()).toString(),
-    startTimestamp: (await contract.startTimestamp()).toString(),
-    endTimestamp: (await contract.endTimestamp()).toString(),
-    state: (await contract.state()).toString(),
-    consumedKwh: (await contract.consumedKwh()).toString(),
-  };
-
-  console.log("\n=== ESTADO INICIAL DEL CONSTRUCTOR ===");
-  console.table(initialState);
-
-  // 5️⃣ Obtener todos los eventos relevantes
-  const eventTypes = ["ContractActivated", "ContractCancelled", "ContractCompleted", "ConsumptionReported"] as const;
-
-  type EventRecord = {
-    block: number;
-    txHash: string;
-    event: string;
-    args: Record<string, any> | null;
-  };
-
-  const events: EventRecord[] = [];
-
-  for (const type of eventTypes) {
-    const filter = contract.filters[type]();
-    const logs = await contract.queryFilter(filter, 0, "latest");
-
-    logs.forEach(log => {
-      let args: Record<string, any> | null = null;
-      if ("args" in log && log.args) {
-        args = Object.fromEntries(Object.entries(log.args));
-      }
-      events.push({
-        block: log.blockNumber,
-        txHash: log.transactionHash,
-        event: type,
-        args,
-      });
-    });
-  }
-
-  // 6️⃣ Ordenar eventos por bloque
-  events.sort((a, b) => a.block - b.block);
-
-  // 7️⃣ Replay del estado
-  let currentState = { ...initialState };
-
-  console.log("\n=== REPLAY DEL CONTRATO PASO A PASO ===");
-  events.forEach((e, i) => {
-    console.log(`\n#${i + 1} Bloque ${e.block} - Evento: ${e.event}`);
-    console.log("Tx hash:", e.txHash);
-    console.log("Args:", e.args ?? "No args");
-
-    // Actualizar estado según evento
-    switch (e.event) {
-      case "ContractActivated":
-        currentState.state = "ACTIVE";
-        break;
-      case "ContractCancelled":
-        currentState.state = "CANCELED";
-        break;
-      case "ContractCompleted":
-        currentState.state = "COMPLETED";
-        break;
-      case "ConsumptionReported":
-        if (e.args && e.args.totalConsumed) {
-          currentState.consumedKwh = e.args.totalConsumed.toString();
-        }
-        break;
-      default:
-        break;
-    }
-
-    console.log("Estado actual:", currentState.state);
-    console.log("Consumo total actual (kWh):", currentState.consumedKwh);
+  // 3️⃣ Obtener todos los logs desde el bloque 0
+  const logsRaw = await provider.getLogs({
+    fromBlock: 0,
+    toBlock: "latest",
   });
 
-  // 8️⃣ Verificar bytecode en la blockchain local
-  const bytecode = await provider.getCode(contractAddress);
-  console.log("\n=== BYTECODE ACTUAL DEL CONTRATO ===");
-  console.log(bytecode === "0x" ? "Contrato no desplegado" : "Código presente en la blockchain");
+  // 4️⃣ Detectar automáticamente todas las direcciones de contratos desplegados
+  const contractAddresses = new Set<string>();
+
+  for (const log of logsRaw) {
+    try {
+      const parsed = iface.parseLog(log);
+      if (parsed) {
+        contractAddresses.add(log.address);
+      }
+    } catch {
+      // ignorar logs que no sean del contrato
+    }
+  }
+
+  console.log("Contratos detectados:", [...contractAddresses]);
+
+  // 5️⃣ Mapeo legible de estados (según enum Solidity)
+  const stateEnumMap: Record<number, string> = {
+    0: "CREATED",
+    1: "ACTIVE",
+    2: "SUSPENDED",
+    3: "CANCELED",
+    4: "TERMINATED",
+    5: "COMPLETED",
+  };
+
+  // 6️⃣ Mapear eventos → estado
+  const stateEventMap: Record<string, string> = {
+    ContractActivated: "ACTIVE",
+    ContractSuspended: "SUSPENDED",
+    ContractResumed: "ACTIVE",
+    ContractCancelled: "CANCELED",
+    ContractCompleted: "COMPLETED",
+    ContractTerminated: "TERMINATED",
+  };
+
+  // 7️⃣ Recorremos cada contrato
+  for (const address of contractAddresses) {
+    const contract = new ethers.Contract(address, abi, provider);
+
+    // Estado inicial on-chain
+    const rawState = Number(await contract.state());
+
+    const initialState = {
+      buyer: await contract.buyer(),
+      seller: await contract.seller(),
+      oracle: await contract.oracle(),
+      pricePerKwhCop: (await contract.pricePerKwhCop()).toString(),
+      startTimestamp: (await contract.startTimestamp()).toString(),
+      endTimestamp: (await contract.endTimestamp()).toString(),
+      state: stateEnumMap[rawState] ?? rawState.toString(),
+      consumedKwh: (await contract.consumedKwh()).toString(),
+    };
+
+    console.log(`\n=== ESTADO INICIAL DEL CONTRATO ${address} ===`);
+    console.table(initialState);
+
+    const events: {
+      block: number;
+      txHash: string;
+      event: string;
+      args: Record<string, any> | null;
+    }[] = [];
+
+    // Filtrar logs solo de este contrato
+    for (const log of logsRaw) {
+      if (log.address !== address) continue;
+
+      try {
+        const parsed = iface.parseLog(log);
+        if (!parsed) continue;
+
+        const args: Record<string, any> = {};
+
+        parsed.fragment.inputs.forEach((input, index) => {
+          const value = parsed.args[index];
+          args[input.name] =
+            typeof value === "bigint" ? value.toString() : value;
+        });
+
+        events.push({
+          block: log.blockNumber,
+          txHash: log.transactionHash,
+          event: parsed.name,
+          args,
+        });
+      } catch {
+        // ignorar logs no relacionados
+      }
+    }
+
+    // Ordenar por bloque
+    events.sort((a, b) => a.block - b.block);
+
+    // Replay
+    let currentState = { ...initialState };
+
+    console.log(`\n=== REPLAY DEL CONTRATO ${address} PASO A PASO ===`);
+
+    events.forEach((e, i) => {
+      console.log(`\n#${i + 1} Bloque ${e.block} - Evento: ${e.event}`);
+      console.log("Tx hash:", e.txHash);
+      console.log("Args:", e.args ?? "No args");
+
+      // Actualizar estado por evento
+      if (stateEventMap[e.event]) {
+        currentState.state = stateEventMap[e.event];
+      }
+
+      // Actualizar consumo
+      if (e.event === "ConsumptionReported") {
+        if (e.args?.totalConsumed) {
+          currentState.consumedKwh = e.args.totalConsumed;
+        }
+      }
+
+      // Motivos
+      if (e.event === "ContractSuspended" && e.args?.reason) {
+        console.log("Motivo de suspensión:", e.args.reason);
+      }
+
+      if (e.event === "ContractCancelled" && e.args?.reason) {
+        console.log("Motivo de cancelación:", e.args.reason);
+      }
+
+      console.log("Estado actual:", currentState.state);
+      console.log("Consumo total actual (kWh):", currentState.consumedKwh);
+    });
+
+    // Verificar bytecode
+    const bytecode = await provider.getCode(address);
+
+    console.log(`\n=== BYTECODE ACTUAL DEL CONTRATO ${address} ===`);
+    console.log(
+      bytecode === "0x"
+        ? "Contrato no desplegado"
+        : "Código presente en la blockchain"
+    );
+  }
 }
 
 main().catch(console.error);

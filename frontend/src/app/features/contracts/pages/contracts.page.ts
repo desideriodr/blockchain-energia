@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -20,42 +21,44 @@ import { ContractDetailInlineComponent } from '../components/contract-detail-inl
 })
 export class ContractsPage implements OnInit {
 
-  contracts$!: Observable<EnergyContract[]>;
+  contracts$!: Observable<EnergyContract[]>; // Observable solo con contratos activos
   loading = false;
   selectedContractId: string | null = null;
 
   page = 1;
   pageSize = 10;
 
-  constructor(
-    private contractsService: ContractsService,
-  ) { }
+  constructor(private contractsService: ContractsService) { }
 
   ngOnInit(): void {
-    this.contracts$ = this.contractsService.getContracts();
+    this.loadContracts();
   }
 
-  /** abre / cierra el detalle inline */
+  /** Carga contratos activos desde el servicio */
+  loadContracts(): void {
+    this.contracts$ = this.contractsService.getContracts().pipe(
+      map(contracts => contracts.filter(c => c.status === 'ACTIVE'))
+    );
+  }
+
+  /** Abre / cierra el detalle inline */
   toggle(contractId: string): void {
     this.selectedContractId =
       this.selectedContractId === contractId ? null : contractId;
   }
 
+  /** Nombre completo del usuario */
   getFullName(user?: User): string {
     if (!user) return '-';
     return `${user.nombres} ${user.apellidos}`;
   }
 
-  prevPage() {
-    if (this.page > 1) this.page--;
-  }
+  /** Paginación */
+  prevPage() { if (this.page > 1) this.page--; }
+  nextPage() { this.page++; }
 
-  nextPage() {
-    this.page++;
-  }
-
+  /** Cancela un contrato y recarga la lista de contratos activos */
   cancel(contractId: string): void {
-
     const confirmed = confirm('¿Estás seguro de cancelar este contrato?');
     if (!confirmed) return;
 
@@ -65,9 +68,8 @@ export class ContractsPage implements OnInit {
       .subscribe({
         next: () => {
           this.loading = false;
-
-          // refetch limpio
-          this.contracts$ = this.contractsService.getContracts();
+          // Recarga los contratos activos
+          this.loadContracts();
         },
         error: (err) => {
           this.loading = false;

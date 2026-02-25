@@ -123,19 +123,14 @@ export class EnergyContractService {
     return contract;
   }
 
-  async contractOffer(
-    userId: string,
-    offerId: string,
-  ): Promise<EnergyContract> {
-
+  async contractOffer(userId: string, offerId: string): Promise<EnergyContract> {
     // ===============================
     // 1️⃣ TRANSACCIÓN DB
     // ===============================
     const contract = await this.dataSource.transaction(async manager => {
-
       const offer = await manager.findOne(EnergyOffer, {
         where: { id: offerId },
-        lock: { mode: 'pessimistic_write' },
+        lock: { mode: 'pessimistic_write' }, // bloquea la oferta
       });
 
       if (!offer || offer.status !== EnergyOfferStatus.OPEN) {
@@ -154,56 +149,73 @@ export class EnergyContractService {
         throw new BadRequestException('No puedes contratar tu propia oferta');
       }
 
-      const startDate = new Date();
+      // 🔹 Buscar contrato previo del mismo buyer + oferta
+      let contract = await manager.findOne(EnergyContract, {
+        where: { offerId: offer.id, buyerWallet: { id: buyerWallet.id } },
+        relations: ['buyerWallet', 'sellerWallet'],
+      });
+
+      const now = new Date();
+      const startDate = now;
       const endDate = new Date(startDate);
       endDate.setFullYear(endDate.getFullYear() + 1);
 
-      const contract = manager.create(EnergyContract, {
-        offerId: offer.id,
-        sellerWallet,
-        buyerWallet,
-        pricePerKwhCop: offer.pricePerKwhCop,
-        startDate,
-        endDate,
-        status: ContractStatus.PENDING_BLOCKCHAIN,
-        isActive: true,
-      });
+      if (contract) {
+        // 🔹 Reactivar contrato existente si estaba inactivo o fallido
+        contract.isActive = true;
+        contract.status = ContractStatus.PENDING_BLOCKCHAIN;
+        contract.startDate = startDate;
+        contract.endDate = endDate;
 
-      await manager.save(contract);
+        // 🔹 Guardar inmediatamente antes de blockchain
+        await manager.save(contract);
+      } else {
+        // 🔹 Crear contrato nuevo
+        contract = manager.create(EnergyContract, {
+          offerId: offer.id,
+          sellerWallet,
+          buyerWallet,
+          pricePerKwhCop: offer.pricePerKwhCop,
+          startDate,
+          endDate,
+          status: ContractStatus.PENDING_BLOCKCHAIN,
+          isActive: true,
+        });
 
-      // 👇 devolvemos contrato completamente hidratado
+        await manager.save(contract);
+      }
+
+      // 🔹 Devolver el contrato con relaciones
       return this.findContractWithRelations(manager, contract.id);
     });
 
     // ===============================
     // 2️⃣ BLOCKCHAIN
     // ===============================
-
     try {
-
-      const deployedAddress =
-        await this.blockchainService.deployEnergyContract(
-          contract.buyerWallet.address,
-          contract.sellerWallet.address,
-          contract.pricePerKwhCop,
-          contract.startDate.getTime(),
-          contract.endDate.getTime(),
-        );
+      const deployedAddress = await this.blockchainService.deployEnergyContract(
+        contract.buyerWallet.address,
+        contract.sellerWallet.address,
+        contract.pricePerKwhCop,
+        Math.floor(contract.startDate.getTime() / 1000),
+        Math.floor(contract.endDate.getTime() / 1000),
+      );
 
       await this.blockchainService.activateContract(deployedAddress);
 
+      // 🔹 Actualizar estado DB solo después de confirmar blockchain
       contract.contractAddress = deployedAddress;
       contract.status = ContractStatus.ACTIVE;
+      contract.isActive = true;
 
       await this.contractRepo.save(contract);
 
       return contract;
 
     } catch (error) {
-
+      // 🔹 En caso de fallo blockchain, marcar como FAILED
       contract.status = ContractStatus.FAILED;
       contract.isActive = false;
-
       await this.contractRepo.save(contract);
 
       throw new InternalServerErrorException(
@@ -263,6 +275,7 @@ export class EnergyContractService {
       // 5️⃣ Cancelar en blockchain
       await this.blockchainService.cancelContract(
         contract.contractAddress,
+        'cancelación voluntaria'
       );
 
       // 6️⃣ Actualizar BD

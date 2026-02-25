@@ -15,7 +15,7 @@ import { EnergySourceModule } from './energy/energy-source/energy-source.module'
 
 import { EnergyProduction } from './energy/energy-production/energy-production.entity';
 import { createProductionLoader } from './energy/energy-production/loaders/production.loader';
-import { EnergySimulationModule } from 'finance/simulation/energy-simulation.module';
+import { EnergySimulationModule } from 'simulation/energy-simulation.module';
 import { EnergyOfferModule } from 'energy/energy-offer/energy-offer.module';
 import { EnergyContractModule } from 'energy/energy-contracts/energy-contracts.module';
 import { EnergyConsumptionModule } from 'energy/energy-consumption/energy-consumption.module';

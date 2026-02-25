@@ -17,5 +17,5 @@ export class EnergyConsumptionGQL {
   recordedAt: Date;
 
   @Field(() => EnergyContractGQL)
-  contract: EnergyContractGQL;
+  contract?: EnergyContractGQL;
 }

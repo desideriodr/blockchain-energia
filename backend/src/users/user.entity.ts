@@ -38,10 +38,6 @@ export class User {
   role: UserRole;
 
   @Field()
-  @Column({ default: 0 })
-  balance: number;
-
-  @Field()
   @Column({ default: true })
   activo: boolean;
 

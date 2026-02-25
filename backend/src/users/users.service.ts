@@ -16,7 +16,6 @@ export class UsersService {
         password,
         nombres,
         apellidos,
-        balance: 0,
         activo: true
       });
       return this.repo.save(user);

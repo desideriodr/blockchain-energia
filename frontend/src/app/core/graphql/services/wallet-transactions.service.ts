@@ -1,38 +1,51 @@
 import { Injectable } from '@angular/core';
-import { Apollo, QueryRef } from 'apollo-angular';
-import { filter, map } from 'rxjs/operators';
+import { Apollo } from 'apollo-angular';
+import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+
 import { MY_TRANSACTIONS_QUERY } from '../queries/my-transactions.query';
-import { WalletTransaction } from '../models/transaction.model';
+import { WalletTransactionPage } from '../models/transaction-page.model';
+
 import { WITHDRAW_MUTATION } from '../mutations/withdraw.mutation';
-import { Wallet } from '../models/energy-contract.model';
 import { DEPOSIT_MUTATION } from '../mutations/deposit.mutation';
+import { Wallet } from '../models/energy-contract.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class WalletTransactionService {
 
-  private txQueryRef!: QueryRef<{ myTransactions: WalletTransaction[] }>;
-
   constructor(private apollo: Apollo) { }
 
-  getMyTransactions(type?: string): Observable<WalletTransaction[]> {
+  getMyTransactions(options: {
+    limit: number;
+    offset: number;
+    type?: string;
+    from?: string;
+    to?: string;
+  }): Observable<WalletTransactionPage> {
 
-  this.txQueryRef = this.apollo.watchQuery<{
-    myTransactions: WalletTransaction[];
-  }>({
-    query: MY_TRANSACTIONS_QUERY,
-    variables: { type },
-    fetchPolicy: 'network-only'
-  });
-
-  return this.txQueryRef.valueChanges.pipe(
-    filter(result => !!result.data?.myTransactions),
-    map(result => result.data!.myTransactions as WalletTransaction[])
-  );
-}
-
+    return this.apollo
+      .query<{ myTransactions: WalletTransactionPage }>({
+        query: MY_TRANSACTIONS_QUERY,
+        variables: {
+          limit: options.limit,
+          offset: options.offset,
+          type: options.type,
+          from: options.from,
+          to: options.to
+        },
+        fetchPolicy: 'network-only'
+      })
+      .pipe(
+        map(result => {
+          if (!result.data) {
+            throw new Error('Sin datos');
+          }
+          return result.data.myTransactions;
+        })
+      );
+  }
 
   depositCop(amount: number): Observable<Wallet> {
     return this.apollo

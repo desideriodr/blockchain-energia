@@ -37,6 +37,15 @@ export class DailyEnergy {
 }
 
 @ObjectType()
+export class ContractsCount {
+  @Field()
+  contractedOffers: string;
+
+  @Field(() => Float)
+  activeContracts: string;
+}
+
+@ObjectType()
 export class EnergySourceDistribution {
   @Field()
   sourceType: string;
@@ -61,4 +70,7 @@ export class DashboardEnergyFinancial {
 
   @Field(() => [EnergySourceDistribution])
   sourceDistribution: EnergySourceDistribution[];
+
+  @Field(() => [ContractsCount])
+  contractsCount: ContractsCount[];
 }

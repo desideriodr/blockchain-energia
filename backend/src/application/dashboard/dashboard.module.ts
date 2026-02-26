@@ -8,10 +8,11 @@ import { DashboardResolver } from './dashboard.resolver';
 import { UsersModule } from 'users/users.module';
 import { EnergyConsumption } from 'energy/energy-consumption/energy-consumption.entity';
 import { EnergySource } from 'energy/energy-source/energy-source.entity';
+import { EnergyContract } from 'energy/energy-contracts/energy-contracts.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([EnergyProduction, EnergyConsumption, EnergySource, WalletTransactions]),
+    TypeOrmModule.forFeature([EnergyProduction, EnergyConsumption, EnergySource, EnergyContract, WalletTransactions]),
     WalletModule,UsersModule
   ],
   providers: [DashboardService, DashboardResolver],

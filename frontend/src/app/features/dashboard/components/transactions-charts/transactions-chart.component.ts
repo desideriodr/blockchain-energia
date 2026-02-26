@@ -25,10 +25,13 @@ export class TransactionsChartComponent implements OnChanges {
   @Input() hourlyFinancial!: HourlyFinancial[];
 
   chartSeries: ApexAxisChartSeries = [];
-  chart: ApexChart = { type: 'bar', height: 350, stacked: true };
+  chart: ApexChart = {
+    type: 'bar', height: 300, stacked: true, toolbar: { show: false },
+    zoom: { enabled: false }
+  };
   xaxis: ApexXAxis = { categories: [] };
   dataLabels: ApexDataLabels = { enabled: false };
-  stroke: ApexStroke = { width: 1 };
+  stroke: ApexStroke = { curve: 'smooth' };
   title: ApexTitleSubtitle = { text: 'Ingresos vs Gastos (COP - Hoy)' };
   plotOptions: ApexPlotOptions = {
     bar: { horizontal: false }

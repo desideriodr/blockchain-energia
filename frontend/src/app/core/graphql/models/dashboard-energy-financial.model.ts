@@ -22,9 +22,18 @@ export interface EnergySourceDistribution {
   capacityKw: number;
 }
 
+export interface ContractsCount {
+  contractedOffers: number;
+  activeContracts: number;
+}
+
+
 export interface DashboardEnergyFinancial {
   hourlyFinancial: HourlyFinancial[];
   hourlyEnergy: HourlyEnergy[];
   monthlyEnergy: DailyEnergy[];
   sourceDistribution: EnergySourceDistribution[];
+  energyMonthlyBalance: number;
+  walletMonthlyBalance: number;
+  contractsCount: ContractsCount[];
 }

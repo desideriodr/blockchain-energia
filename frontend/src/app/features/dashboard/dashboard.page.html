@@ -1,17 +1,35 @@
-<div class="dashboard-content">
+<div class="dashboard" *ngIf="dashboardEnergyFinancial$ | async as data">
 
-  <ng-container *ngIf="dashboardEnergyFinancial$ | async as data">
+  <!-- KPIs -->
+  <section class="kpi-section">
+    <app-kpi-cards [energyMonthlyBalance]="energyMonthlyBalanceValue" [walletMonthlyBalance]="walletMonthlyBalanceValue"
+      [contractsCount]="data.contractsCount">
+    </app-kpi-cards>
+  </section>
 
-    <app-energy-chart
-      [hourlyEnergy]="data.hourlyEnergy"
-      [monthlyEnergy]="data.monthlyEnergy"
-      [sourceDistribution]="data.sourceDistribution">
-    </app-energy-chart>
+  <div class="charts-grid">
+    <!-- Hourly Energy -->
+    <section class="chart-section">
+      <app-hourly-energy-chart [hourlyEnergy]="data.hourlyEnergy">
+      </app-hourly-energy-chart>
+    </section>
 
-    <app-transactions-chart
-      [hourlyFinancial]="data.hourlyFinancial">
-    </app-transactions-chart>
+    <!-- Monthly Energy -->
+    <section class="chart-section">
+      <app-monthly-energy-chart [monthlyEnergy]="data.monthlyEnergy">
+      </app-monthly-energy-chart>
+    </section>
 
-  </ng-container>
+    <!-- Source Distribution (Donut) -->
+    <section class="chart-section">
+      <app-source-distribution-chart [sourceDistribution]="data.sourceDistribution">
+      </app-source-distribution-chart>
+    </section>
 
+    <!-- Transactions -->
+    <section class="chart-section">
+      <app-transactions-chart [hourlyFinancial]="data.hourlyFinancial">
+      </app-transactions-chart>
+    </section>
+  </div>
 </div>

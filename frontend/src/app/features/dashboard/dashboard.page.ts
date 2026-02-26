@@ -8,8 +8,10 @@ import { DashboardEnergyFinancialService } from '../../core/graphql/services/das
 import { DashboardEnergyFinancial } from '../../core/graphql/models/dashboard-energy-financial.model';
 
 import { KpiCardsComponent } from './components/kpi-cards/kpi-cards.component';
-import { EnergyChartComponent } from './components/energy-chart/energy-chart.component';
-import { TransactionsChartComponent } from './components/transactions-chart/transactions-chart.component';
+import { HourlyEnergyChartComponent } from './components/energy-charts/hourly/hourly-energy-chart.component';
+import { MonthlyEnergyChartComponent } from './components/energy-charts/monthly/monthly-energy-chart.component';
+import { SourceDistributionChartComponent } from './components/source-charts/source-distribution-chart.component';
+import { TransactionsChartComponent } from './components/transactions-charts/transactions-chart.component';
 
 @Component({
   standalone: true,
@@ -20,7 +22,9 @@ import { TransactionsChartComponent } from './components/transactions-chart/tran
     CommonModule,
     NgApexchartsModule,
     KpiCardsComponent,
-    EnergyChartComponent,
+    HourlyEnergyChartComponent,
+    MonthlyEnergyChartComponent,
+    SourceDistributionChartComponent,
     TransactionsChartComponent
   ],
 })
@@ -32,5 +36,30 @@ export class DashboardPage {
     private dashboardEnergyFinancialService: DashboardEnergyFinancialService
   ) {
     this.dashboardEnergyFinancial$ = this.dashboardEnergyFinancialService.getDashboard();
+  }
+
+  energyMonthlyBalanceValue = 0;
+  walletMonthlyBalanceValue = 0;
+  
+  ngOnInit() {
+    this.dashboardEnergyFinancial$.subscribe(data => {
+
+      // Balance energético
+      const totalProduction = data.monthlyEnergy
+        .reduce((sum, d) => sum + d.productionKwh, 0);
+
+      const totalConsumption = data.monthlyEnergy
+        .reduce((sum, d) => sum + d.consumptionKwh, 0);
+
+      this.energyMonthlyBalanceValue =
+        totalProduction - totalConsumption;
+
+      // Balance billetera
+      this.walletMonthlyBalanceValue =
+        data.hourlyFinancial
+          .reduce((sum, h) =>
+            sum + h.incomeCOP - h.expenseCOP, 0);
+
+    });
   }
 }

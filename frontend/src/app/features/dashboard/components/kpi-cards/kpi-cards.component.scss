@@ -1,53 +1,69 @@
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
-  width: 100%;
-  max-width: 1200px;
-}
-
-.kpi-cards {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-  max-width: 1200px;
 }
 
 .kpi-card {
   background: #ffffff;
   padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  flex: 1 1 calc(33.333% - 1rem);
-  min-width: 250px;
-  text-align: center;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
 
-.kpi-card h3 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-  color: var(--color-primary);
+/* Elevación suave */
+.kpi-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
 }
 
-.kpi-card p {
-  font-size: 2rem;
-  font-weight: bold;
+/* Energía - Verde */
+.kpi-card.energy:hover {
+  background:#2ecc71;
 }
 
-.kpi-card .unit {
-  font-size: 1rem;
-  color: #6b7280; // Gray-500
+/* Billetera - Azul */
+.kpi-card.wallet:hover {
+  background:#3498db;
 }
 
-@media (max-width: 768px) {
-  .kpi-cards {
-    flex-direction: column;
-    align-items: center;
-  }
-  .kpi-card {
-    flex: 1 1 100%;
-    max-width: 400px;
-  }
+/* Buyer - Naranja */
+.kpi-card.buyer:hover {
+  background:#f39c12;
+}
+
+/* Seller - Morado */
+.kpi-card.seller:hover {
+  background:#da7cff;
+}
+
+.kpi-title {
+  font-size: 0.8rem;
+  color: #646464;
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  transition: transform 0.3s ease;
+}
+
+.kpi-card:hover .kpi-value {
+  transform: scale(1.08);
+}
+
+.kpi-value.positive {
+  color: #16a34a;
+}
+
+.kpi-value.negative {
+  color: #dc2626;
 }

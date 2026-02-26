@@ -1,18 +1,33 @@
 <div class="kpi-grid">
 
-  <div class="kpi-card">
-    <h3>Energía producida</h3>
-    <p>{{ kpis.totalEnergyProduced }} kWh</p>
+  <!-- Balance energético -->
+  <div class="kpi-card energy">
+    <div class="kpi-title">Balance Energético Mensual</div>
+    <div class="kpi-value">
+      {{ energyMonthlyBalance | number:'1.0-2' }} kWh
+    </div>
   </div>
 
-  <div class="kpi-card">
-    <h3>ETH transferido</h3>
-    <p>{{ kpis.totalEnergyTransferred }}</p>
+  <!-- Balance billetera -->
+  <div class="kpi-card wallet">
+    <div class="kpi-title">Balance Billetera Mensual</div>
+    <div class="kpi-value">
+      {{ walletMonthlyBalance | currency:'COP':'symbol':'1.0-0' }}
+    </div>
   </div>
 
-  <div class="kpi-card">
-    <h3>Transacciones</h3>
-    <p>{{ kpis.totalTransactions }}</p>
+  <!-- KPI condicional por rol -->
+  <div class="kpi-card buyer">
+    <div class="kpi-title">Ofertas Kwh Contratadas</div>
+    <div class="kpi-value">
+      {{ buyerContracts }}
+    </div>
   </div>
 
+  <div class="kpi-card seller">
+    <div class="kpi-title">Mis Contratos activos </div>
+    <div class="kpi-value">
+      {{ sellerContracts }}
+    </div>
+  </div>
 </div>

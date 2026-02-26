@@ -6,7 +6,7 @@ export type TxType =
   | 'system_adjust';
 
 export interface WalletTransaction {
-  id: number;
+  id: string;
   fromAddress: string;
   toAddress?: string;
   grossAmountCop: number;

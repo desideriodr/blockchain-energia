@@ -34,6 +34,10 @@ export class DashboardEnergyFinancialService {
               productionKwh
               capacityKw
             }
+            contractsCount {
+              contractedOffers
+              activeContracts
+            }
           }
         }
       `

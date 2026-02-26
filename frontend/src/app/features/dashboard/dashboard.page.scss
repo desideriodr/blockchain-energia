@@ -5,8 +5,53 @@
   min-height: 100vh;
 }
 
-.dashboard-content {
+.dashboard {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
+}
+
+/* KPIs */
+.kpi-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
+  align-items: start;
+}
+
+/* Filas de gráficas */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.chart-section {
+  margin-top: 2rem;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  height: 350px;
+}
+
+.chart-section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+}
+.chart-section app-energy-chart,
+.chart-section app-transactions-chart {
+  display: block;
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 16px;
+}
+/* Contenedor visual de cada gráfica */
+.chart-container {
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }

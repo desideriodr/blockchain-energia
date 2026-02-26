@@ -12,26 +12,27 @@ import { WalletGQL } from '../wallet/graphql/wallet.graphql';
 import { TimeSeriesPoint } from 'application/dashboard/graphql/time-series.graphql';
 import { MeSummary } from 'application/dashboard/graphql/me-summary.graphql';
 import { TxType } from './graphql/dto/wallet-transaction.enums';
+import { WalletTransactionPageGQL } from './graphql/wallet-transactions-page.graphql';
 
 @Resolver(() => WalletTransactionGQL)
 export class WalletTransactionResolver {
 
   constructor(
     private readonly walletTxService: WalletTransactionService,
-  ) {}
+  ) { }
 
   /* ============================================
      TRANSACTIONS LIST
   ============================================ */
 
   @UseGuards(GqlAuthGuard)
-  @Query(() => [WalletTransactionGQL])
+  @Query(() => WalletTransactionPageGQL)
   async myTransactions(
     @Context() ctx,
     @Args('type', { type: () => TxType, nullable: true }) type?: TxType,
     @Args('limit', { type: () => Int, nullable: true }) limit?: number,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
-  ): Promise<WalletTransactionGQL[]> {
+  ): Promise<WalletTransactionPageGQL> {
 
     const userId = ctx.req.user.id;
 
@@ -41,7 +42,12 @@ export class WalletTransactionResolver {
       offset,
     });
 
-    return result.data.map(tx => this.toTxGQL(tx));
+    return {
+      total: result.total,
+      limit: result.limit,
+      offset: result.offset,
+      data: result.data.map(tx => this.toTxGQL(tx)),
+    };
   }
 
   /* ============================================
@@ -112,8 +118,8 @@ export class WalletTransactionResolver {
       fromAddress: tx.fromAddress,
       toAddress: tx.toAddress ?? undefined,
       amountCop: Number(tx.amountCop),
-      grossAmountCop: tx.metadata?.grossAmountCop? Number(tx.metadata.grossAmountCop): 0,
-      feeCOP: tx.metadata?.feeCOP? Number(tx.metadata.feeCOP): 0,
+      grossAmountCop: tx.metadata?.grossAmountCop ? Number(tx.metadata.grossAmountCop) : 0,
+      feeCOP: tx.metadata?.feeCOP ? Number(tx.metadata.feeCOP) : 0,
       type: tx.type,
       createdAt: tx.createdAt,
     };

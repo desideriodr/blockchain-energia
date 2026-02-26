@@ -11,7 +11,8 @@ import { EnergyProduction } from "energy/energy-production/energy-production.ent
 import { EnergyConsumption } from "energy/energy-consumption/energy-consumption.entity";
 import { WalletTransactions } from "finance/wallet-transactions/wallet-transactions.entity";
 import { EnergySource } from "energy/energy-source/energy-source.entity";
-import { DailyEnergy, EnergySourceDistribution, HourlyEnergy, HourlyFinancial } from "./graphql/dashboard-energy-financial";
+import { ContractsCount, DailyEnergy, EnergySourceDistribution, HourlyEnergy, HourlyFinancial } from "./graphql/dashboard-energy-financial";
+import { EnergyContract } from "energy/energy-contracts/energy-contracts.entity";
 
 @Injectable()
 export class DashboardService {
@@ -30,6 +31,9 @@ export class DashboardService {
 
     @InjectRepository(EnergySource)
     private readonly sourceRepo: Repository<EnergySource>,
+
+    @InjectRepository(EnergyContract)
+    private readonly contractRepo: Repository<EnergyContract>
   ) { }
 
   async getDashboardKPI(userId: string): Promise<DashboardKPI> {
@@ -269,16 +273,62 @@ export class DashboardService {
   }
 
   /* ============================================================
+     CONTRACTS COUNT
+  ============================================================ */
+
+  async getContractsCount(userId:string): Promise<ContractsCount[]> {
+    const wallet = await this.walletService.getWalletByUser(userId);
+    const walletId = wallet.id;
+
+    const raw = await this.contractRepo
+    .createQueryBuilder('ec')
+    .select(`
+        SUM(
+          CASE 
+            WHEN ec."sellerWalletId" = :id 
+            THEN 1
+            ELSE 0
+          END
+        )
+      `, 'contractedOffers')
+      .addSelect(`
+        SUM(
+          CASE 
+            WHEN ec."buyerWalletId" = :id 
+            THEN 1
+            ELSE 0
+          END
+        )
+      `, 'activeContracts')
+    .where(`ec.status = status`)
+      .andWhere(`
+        ec."sellerWalletId" = :id 
+        OR ec."buyerWalletId" = :id
+      `)
+      .setParameter('id', walletId)
+      .setParameter('status', "ACTIVE")
+    .groupBy('ec.status')
+    .getRawMany();
+
+    return raw.map(r => ({
+      contractedOffers: r.contractedOffers,
+      activeContracts: r.activeContracts
+    }));
+
+  }
+
+  /* ============================================================
      MAIN ENTRY
   ============================================================ */
 
   async getEnergyFinancialDashboard(userId: string) {
-    const [hourlyFinancial, hourlyEnergy, monthlyEnergy, sourceDistribution] =
+    const [hourlyFinancial, hourlyEnergy, monthlyEnergy, sourceDistribution, contractsCount] =
       await Promise.all([
         this.getHourlyFinancial(userId),
         this.getHourlyEnergy(userId),
         this.getMonthlyEnergy(userId),
         this.getSourceDistribution(userId),
+        this.getContractsCount(userId)
       ]);
 
     return {
@@ -286,6 +336,7 @@ export class DashboardService {
       hourlyEnergy,
       monthlyEnergy,
       sourceDistribution,
+      contractsCount,
     };
   }
 }

@@ -7,10 +7,12 @@ import {
   ApexXAxis,
   ApexDataLabels,
   ApexStroke,
-  ApexTitleSubtitle
+  ApexTitleSubtitle,
+  ApexPlotOptions,
+  ApexLegend
 } from 'ng-apexcharts';
 
-import { TimeSeriesPoint } from '../../../../core/graphql/models/dashboard-home.model';
+import { HourlyFinancial } from '../../../../core/graphql/models/dashboard-energy-financial.model';
 
 @Component({
   standalone: true,
@@ -20,28 +22,35 @@ import { TimeSeriesPoint } from '../../../../core/graphql/models/dashboard-home.
 })
 export class TransactionsChartComponent implements OnChanges {
 
-  @Input({ required: true })
-  seriesData!: TimeSeriesPoint[];
+  @Input() hourlyFinancial!: HourlyFinancial[];
 
   chartSeries: ApexAxisChartSeries = [];
-  chart: ApexChart = { type: 'bar', height: 300 };
+  chart: ApexChart = { type: 'bar', height: 350, stacked: true };
   xaxis: ApexXAxis = { categories: [] };
   dataLabels: ApexDataLabels = { enabled: false };
-  stroke: ApexStroke = { curve: 'smooth' };
-  title: ApexTitleSubtitle = { text: 'Transacciones por día' };
+  stroke: ApexStroke = { width: 1 };
+  title: ApexTitleSubtitle = { text: 'Ingresos vs Gastos (COP - Hoy)' };
+  plotOptions: ApexPlotOptions = {
+    bar: { horizontal: false }
+  };
+  legend: ApexLegend = { position: 'top' };
 
   ngOnChanges(): void {
-    if (!this.seriesData?.length) return;
+    if (!this.hourlyFinancial?.length) return;
 
     this.chartSeries = [
       {
-        name: 'Transacciones',
-        data: this.seriesData.map(p => p.value),
+        name: 'Ingresos',
+        data: this.hourlyFinancial.map(h => h.incomeCOP),
+      },
+      {
+        name: 'Gastos',
+        data: this.hourlyFinancial.map(h => -h.expenseCOP),
       },
     ];
 
     this.xaxis = {
-      categories: this.seriesData.map(p => p.date),
+      categories: this.hourlyFinancial.map(h => h.hour),
     };
   }
 }

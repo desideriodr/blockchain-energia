@@ -7,6 +7,8 @@ import { GqlAuthGuard } from 'auth/gql-auth.guard';
 import { MeSummary } from './graphql/me-summary.graphql';
 import { WalletService } from 'finance/wallet/wallet.service';
 import { UsersService } from 'users/users.service';
+import { DashboardEnergyFinancial } from './graphql/dashboard-energy-financial';
+import { CurrentUser } from 'auth/current-user.decorator';
 
 @Resolver()
 export class DashboardResolver {
@@ -51,5 +53,13 @@ export class DashboardResolver {
         energyStored: Number(wallet.energyStored)
       }
     };
+  }
+  
+  // Dashboard
+  @UseGuards(GqlAuthGuard)
+  @Query(() => DashboardEnergyFinancial)
+  async dashboardEnergyFinancial(@Context() ctx): Promise<DashboardEnergyFinancial> {
+    const userId = ctx.req.user.id
+    return this.dashboardService.getEnergyFinancialDashboard(userId);
   }
 }

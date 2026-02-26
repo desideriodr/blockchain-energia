@@ -6,10 +6,12 @@ import { WalletModule } from 'finance/wallet/wallet.module';
 import { DashboardService } from './dashboard.service';
 import { DashboardResolver } from './dashboard.resolver';
 import { UsersModule } from 'users/users.module';
+import { EnergyConsumption } from 'energy/energy-consumption/energy-consumption.entity';
+import { EnergySource } from 'energy/energy-source/energy-source.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([EnergyProduction, WalletTransactions]),
+    TypeOrmModule.forFeature([EnergyProduction, EnergyConsumption, EnergySource, WalletTransactions]),
     WalletModule,UsersModule
   ],
   providers: [DashboardService, DashboardResolver],

@@ -1,5 +1,17 @@
-<div class="dashboard-content" *ngIf="dashboardHome$ | async as home">
-    <app-kpi-cards [kpis]="home.kpis"></app-kpi-cards>
-    <app-energy-chart [seriesData]="home.energySeries"></app-energy-chart>
-    <app-transactions-chart [seriesData]="home.transactionSeries"></app-transactions-chart>
+<div class="dashboard-content">
+
+  <ng-container *ngIf="dashboardEnergyFinancial$ | async as data">
+
+    <app-energy-chart
+      [hourlyEnergy]="data.hourlyEnergy"
+      [monthlyEnergy]="data.monthlyEnergy"
+      [sourceDistribution]="data.sourceDistribution">
+    </app-energy-chart>
+
+    <app-transactions-chart
+      [hourlyFinancial]="data.hourlyFinancial">
+    </app-transactions-chart>
+
+  </ng-container>
+
 </div>

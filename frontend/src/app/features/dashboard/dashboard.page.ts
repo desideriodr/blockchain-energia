@@ -2,8 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Observable } from 'rxjs';
-import { DashboardHomeService } from '../../core/graphql/services/dashboard-home.service';
-import { DashboardHome } from '../../core/graphql/models/dashboard-home.model';
+
+import { DashboardEnergyFinancialService } from '../../core/graphql/services/dashboard-energy-financial.service';
+
+import { DashboardEnergyFinancial } from '../../core/graphql/models/dashboard-energy-financial.model';
+
 import { KpiCardsComponent } from './components/kpi-cards/kpi-cards.component';
 import { EnergyChartComponent } from './components/energy-chart/energy-chart.component';
 import { TransactionsChartComponent } from './components/transactions-chart/transactions-chart.component';
@@ -13,13 +16,21 @@ import { TransactionsChartComponent } from './components/transactions-chart/tran
   selector: 'app-dashboard-page',
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
-  imports: [CommonModule, NgApexchartsModule, KpiCardsComponent, EnergyChartComponent, TransactionsChartComponent],
+  imports: [
+    CommonModule,
+    NgApexchartsModule,
+    KpiCardsComponent,
+    EnergyChartComponent,
+    TransactionsChartComponent
+  ],
 })
 export class DashboardPage {
 
-  dashboardHome$: Observable<DashboardHome>;
+  dashboardEnergyFinancial$: Observable<DashboardEnergyFinancial>;
 
-  constructor(private dashboardHomeService: DashboardHomeService) {
-    this.dashboardHome$ = this.dashboardHomeService.getDashboardHome();
+  constructor(
+    private dashboardEnergyFinancialService: DashboardEnergyFinancialService
+  ) {
+    this.dashboardEnergyFinancial$ = this.dashboardEnergyFinancialService.getDashboard();
   }
 }

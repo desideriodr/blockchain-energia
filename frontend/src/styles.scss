@@ -1,7 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
-:root {
-  --color-primary: #eb812b;
-  --color-bg-sidebar: #020617;
-  --color-bg-topbar: #020617;
-  --color-bg-content: #f1f5f9;
+// styles.scss — asegúrate que esté esto
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;   // ← esto elimina el scrollbar del body
+  margin: 0;
+  padding: 0;
 }

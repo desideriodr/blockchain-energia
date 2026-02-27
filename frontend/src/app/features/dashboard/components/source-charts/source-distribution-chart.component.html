@@ -1,6 +1,14 @@
-  <!-- SOURCE DISTRIBUTION -->
-  <div class="chart-card">
-    <apx-chart [series]="sourceSeries" [chart]="sourceChart" [labels]="sourceLabels" [title]="sourceTitle"
-      [responsive]="responsive">
-    </apx-chart>
-  </div>
+<div class="chart-card">
+  <h3 class="chart-title">Distribución por Fuente</h3>
+  <apx-chart
+    [series]="sourceSeries"
+    [chart]="sourceChart"
+    [labels]="sourceLabels"
+    [colors]="colors"
+    [plotOptions]="plotOptions"
+    [dataLabels]="dataLabels"
+    [tooltip]="tooltip"
+    [legend]="legend"
+    [responsive]="responsive">
+  </apx-chart>
+</div>

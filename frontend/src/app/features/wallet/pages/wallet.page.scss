@@ -16,6 +16,7 @@
 .page-title {
   font-size: 1.6rem;
   font-weight: 600;
+  color: #1f2937;
 }
 
 /* =============================
@@ -35,31 +36,61 @@
 ============================= */
 
 .balance-card {
-  padding: 1rem 1.5rem;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
 }
+
+.operations {
+  align-self: start;
+  justify-self: start;
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (max-width: 900px) {
+  .balance-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Balance más centrado y compacto */
 
 .balance-content {
   display: flex;
+  justify-content: center;
+  /* 🔥 centrado horizontal */
   align-items: center;
-  gap: 1rem;
+  /* 🔥 centrado vertical */
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0f766e, #065f46);
+  color: white;
+  min-height: 140px;
+  /* 🔥 reduce tamaño */
 }
 
-.wallet-icon {
-  font-size: 2rem;
-  background: #e0f2fe;
-  padding: 0.8rem;
-  border-radius: 50%;
+.balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .balance-label {
-  font-size: 0.85rem;
-  color: #666;
+  font-size: 0.75rem;
+  opacity: 0.85;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .balance-value {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #111;
+  font-size: 1.65rem;
+  /* 🔥 reducido */
+  font-weight: 600;
+  letter-spacing: 0.4px;
 }
 
 /* =============================
@@ -67,22 +98,33 @@
 ============================= */
 
 .section-title {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #065f46;
 }
 
 .form-row {
   display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  min-width: 220px;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.form-group label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 input {
@@ -90,11 +132,14 @@ input {
   border: 1px solid #dcdfe6;
   border-radius: 6px;
   font-size: 0.9rem;
+  background: #f9fafb;
+  transition: all 0.2s ease;
 }
 
 input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
 }
 
 /* =============================
@@ -102,30 +147,47 @@ input:focus {
 ============================= */
 
 button {
-  padding: 0.6rem 1rem;
+  padding: 0.55rem 0.9rem;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
 }
 
-.btn-primary {
-  background-color: #3b82f6;
-  color: white;
-}
+.btn {
+  &.primary {
+    background-color: #0f766e;
+    color: white;
 
-.btn-primary:hover {
-  background-color: #2563eb;
-}
+    &:hover {
+      background-color: #0d5f59;
+    }
+  }
 
-.btn-danger {
-  background-color: #ef4444;
-  color: white;
-}
+  &.danger {
+    background-color: #b91c1c;
+    color: white;
 
-.btn-danger:hover {
-  background-color: #dc2626;
+    &:hover {
+      background-color: #991b1b;
+    }
+  }
+
+  &.ghost {
+    background-color: transparent;
+    border: 1px solid #dcdfe6;
+    color: #444;
+
+    &:hover {
+      background-color: #f3f4f6;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
 }
 
 /* =============================
@@ -136,23 +198,25 @@ button {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-}
 
-.transactions-table th,
-.transactions-table td {
-  padding: 0.8rem;
-  text-align: left;
-  border-bottom: 1px solid #f0f0f0;
-}
+  th,
+  td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+  }
 
-.transactions-table th {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #555;
-}
+  th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
 
-.transactions-table tbody tr:hover {
-  background-color: #f9fafb;
+  tbody tr:hover {
+    background-color: #f3f4f6;
+  }
 }
 
 .mono {
@@ -160,32 +224,74 @@ button {
 }
 
 /* =============================
+   SIGNED AMOUNT
+============================= */
+
+.positive {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.negative {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* =============================
    STATUS BADGES
 ============================= */
 
 .type {
-  padding: 0.3rem 0.6rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
-}
 
-.type.copDeposit {
-  background-color: #dcfce7;
-  color: #166534;
-}
-  
-.type.copWithdraw {
-  background-color: #fee2e2;
-  color: #b91c1c;
+  &.copDeposit {
+    background-color: #dcfce7;
+    color: #166534;
+  }
+
+  &.copWithdraw {
+    background-color: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.energyConsumption {
+    background-color: #e0f2fe;
+    color: #075985;
+  }
 }
 
 /* =============================
-   LOADING
+   STATES
 ============================= */
 
-.loading {
+.table-loading,
+.wallet-loading,
+.empty-state {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* =============================
+   PAGINATION
+============================= */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.page-info {
+  font-size: 0.85rem;
+  color: #4b5563;
+  font-weight: 500;
 }

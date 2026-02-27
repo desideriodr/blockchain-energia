@@ -47,12 +47,12 @@
 
     <tbody>
       <tr *ngFor="let offer of offers$ | async">
-        <td class="mono">
+        <td>
           {{ offer.seller.nombres }}
           {{ offer.seller.apellidos }}
         </td>
-        <td class="mono">{{ offer.pricePerKwhCop }}</td>
-        <td class="mono">{{ offer.createdAt }}</td>
+        <td>{{ offer.pricePerKwhCop }}</td>
+        <td>{{ offer.createdAt }}</td>
         <td>
           <span class="status" [class.open]="offer.status === 'OPEN'" [class.closed]="offer.status !== 'OPEN'">
             {{ offer.status }}

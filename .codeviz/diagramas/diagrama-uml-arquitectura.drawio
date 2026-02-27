@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <mxfile host="codeviz.app" modified="2026-02-27T01:56:31.492Z" agent="CodeViz Exporter" version="14.6.5" type="device">
+          <diagram id="codeviz-diagram" name="System Diagram">
+            <mxGraphModel dx="1000" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+              <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="project_architecture.cv::backend_bl" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="1385.5" y="-265" width="1008" height="479" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::backend_bl_label" value="**Lógica de Negocio**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="1393.5" y="-257" width="932" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::backend_services" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="1425" y="194" width="626" height="269" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::backend_services_label" value="**Servicios**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="1433" y="202" width="550" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::backend_data" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="40" y="448" width="1981" height="245" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::backend_data_label" value="**Capa de Datos**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="48" y="456" width="1905" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::backend_infra" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="1981" y="443" width="850" height="245" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::backend_infra_label" value="**Infraestructura**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::backend_app">
+                  <mxGeometry x="1989" y="451" width="774" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::frontend_app" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                  <mxGeometry x="463.5" y="-92" width="1194" height="285" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::frontend_app_label" value="**Aplicación Frontend (UI)**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                  <mxGeometry x="471.5" y="-84" width="1118" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::backend_app" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                  <mxGeometry x="40" y="173" width="2831" height="1068" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::backend_app_label" value="**Aplicación Backend**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                  <mxGeometry x="48" y="181" width="2755" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::smart_contracts" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                  <mxGeometry x="2193.5" y="1231" width="397" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::smart_contracts_label" value="**Contratos Inteligentes**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                  <mxGeometry x="2201.5" y="1239" width="321" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="project_architecture.cv::blockchain_energia_system" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="__uml__project_architecture.cv">
+                  <mxGeometry x="32" y="150" width="2885" height="1683" as="geometry"/>
+                </mxCell>
+                <mxCell id="project_architecture.cv::blockchain_energia_system_label" value="**Sistema Blockchain Energia**" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="__uml__project_architecture.cv">
+                  <mxGeometry x="40" y="158" width="2809" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="base-diagram-group" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="1">
+                  <mxGeometry x="2896.5" y="799" width="467" height="291" as="geometry"/>
+                </mxCell>
+                <mxCell id="base-diagram-group_label" value="Base Diagram" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="1">
+                  <mxGeometry x="2904.5" y="807" width="391" height="24" as="geometry"/>
+                </mxCell>
+<mxCell id="__uml__project_architecture.cv" value="" style="html=1;whiteSpace=wrap;container=1;fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=1;fillOpacity=20;strokeWidth=2;containerType=none;recursiveResize=0;movable=1;resizable=1;autosize=0;dropTarget=0" vertex="1" parent="1">
+                  <mxGeometry x="12" y="12" width="2925" height="1865" as="geometry"/>
+                </mxCell>
+                <mxCell id="__uml__project_architecture.cv_label" value="project_architecture.cv" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;labelBackgroundColor=white;spacing=5" vertex="1" parent="1">
+                  <mxGeometry x="20" y="20" width="2849" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="begin-diagram-generation" value="Generate Base Diagram" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="base-diagram-group">
+                      <mxGeometry x="20" y="60" width="369" height="191" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::user" value="**Usuario Final**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="__uml__project_architecture.cv">
+                      <mxGeometry x="882" y="60" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::frontend_app_main" value="**App Component**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::frontend_app">
+                      <mxGeometry x="902" y="144" width="212" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::frontend_auth" value="**Auth Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::frontend_app">
+                      <mxGeometry x="20" y="132" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::frontend_core" value="**Core Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::frontend_app">
+                      <mxGeometry x="337" y="144" width="259" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::frontend_features" value="**Features Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::frontend_app">
+                      <mxGeometry x="616" y="144" width="266" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_app_main" value="**Main Application**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_bl">
+                      <mxGeometry x="20" y="132" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_auth" value="**Auth Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_bl">
+                      <mxGeometry x="337" y="132" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_users" value="**Users Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_bl">
+                      <mxGeometry x="360" y="354" width="251" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_energy" value="**Energy Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_bl">
+                      <mxGeometry x="631" y="342" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_finance" value="**Finance Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_bl">
+                      <mxGeometry x="506.5" y="249" width="297" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_simulation" value="**Simulation Module**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_bl">
+                      <mxGeometry x="259.5" y="249" width="203" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_dashboard" value="**Dashboard Service**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_services">
+                      <mxGeometry x="249" y="132" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::backend_analytics" value="**Analytics Service**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_services">
+                      <mxGeometry x="20" y="144" width="209" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::main_database" value="**Main Database**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="1738" y="132" width="163" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::user_entity" value="**User Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="1137" y="132" width="129" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::energy_consumption_entity" value="**Energy Consumption Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="263" y="132" width="238" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::energy_contract_entity" value="**Energy Contract Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="713" y="132" width="204" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::energy_offer_entity" value="**Energy Offer Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="937" y="132" width="180" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::energy_production_entity" value="**Energy Production Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="20" y="132" width="223" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::energy_source_entity" value="**Energy Source Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="1286" y="132" width="193" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::wallet_entity" value="**Wallet Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="521" y="132" width="172" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::wallet_transaction_entity" value="**Wallet Transaction Entity**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_data">
+                      <mxGeometry x="1499" y="132" width="219" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::infra_blockchain" value="**Blockchain Infrastructure**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_infra">
+                      <mxGeometry x="281" y="132" width="231" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::infra_finance_helper" value="**Finance Helper**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_infra">
+                      <mxGeometry x="20" y="132" width="241" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::infra_http_client" value="**HTTP Client**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::backend_infra">
+                      <mxGeometry x="532" y="132" width="238" height="73" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::energy_supply_contract" value="**EnergySupplyContract**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::smart_contracts">
+                      <mxGeometry x="20" y="132" width="297" height="97" as="geometry"/>
+                    </mxCell>
+<mxCell id="project_architecture.cv::external_pricing_service" value="**External Pricing Service**" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5" vertex="1" parent="project_architecture.cv::blockchain_energia_system">
+                      <mxGeometry x="2530.5" y="1499" width="274" height="73" as="geometry"/>
+                    </mxCell>
+                <mxCell id="edge-project_architecture.cv::e1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::user" target="project_architecture.cv::frontend_app">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e1_label" value="Usa" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e1">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::frontend_app" target="project_architecture.cv::backend_app">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e2_label" value="Makes API Calls" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e2">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::backend_auth" target="project_architecture.cv::backend_users">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e3_label" value="Authenticates and Manages Users" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e3">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::backend_bl" target="project_architecture.cv::main_database">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e4_label" value="Reads/Writes data" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e4">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::backend_bl" target="project_architecture.cv::backend_services">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e5_label" value="Uses" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e5">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::backend_services" target="project_architecture.cv::main_database">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e6_label" value="Reads/Writes data" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e6">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::infra_blockchain" target="project_architecture.cv::energy_supply_contract">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e7_label" value="Interacts with" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e7">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+<mxCell id="edge-project_architecture.cv::e8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#808080;strokeWidth=2;jumpStyle=arc;jumpSize=10;spacing=15;labelBackgroundColor=white;labelBorderColor=none" edge="1" parent="1" source="project_architecture.cv::infra_http_client" target="project_architecture.cv::external_pricing_service">
+                    <mxGeometry relative="1" as="geometry"/>
+                  </mxCell>
+                  <mxCell id="edge-project_architecture.cv::e8_label" value="Fetches prices" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="edge-project_architecture.cv::e8">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                      <mxPoint as="offset"/>
+                    </mxGeometry>
+                  </mxCell>
+              </root>
+            </mxGraphModel>
+          </diagram>
+        </mxfile>

@@ -1,10 +1,66 @@
-/* CARD ESTILO APP */
-.chart-card {
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+// shared para los 4 componentes de charts
+:host {
+  display: block;
+  width: 100%;
+}
 
-    display: flex;
-    flex-direction: column;
+.chart-card {
+  width: 100%;
+  min-height: 320px; 
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.25rem;
+
+  // Eliminar cualquier margen interno que desplace el chart
+  ::ng-deep .apexcharts-canvas {
+    margin: 0 auto;
+  }
+
+  // Título interno de ApexCharts
+  ::ng-deep .apexcharts-title-text {
+    font-family: inherit !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    fill: #1f2937 !important;
+  }
+
+  // Leyenda
+  ::ng-deep .apexcharts-legend-text {
+    font-family: inherit !important;
+    font-size: 0.78rem !important;
+    color: #6b7280 !important;
+  }
+
+  // Ejes
+  ::ng-deep .apexcharts-xaxis-label,
+  ::ng-deep .apexcharts-yaxis-label {
+    font-family: inherit !important;
+    font-size: 0.72rem !important;
+    fill: #9ca3af !important;
+  }
+
+  // Tooltip
+  ::ng-deep .apexcharts-tooltip {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #e5e7eb !important;
+    font-family: inherit !important;
+    font-size: 0.8rem !important;
+  }
+
+  ::ng-deep .apexcharts-tooltip-title {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+  }
+}
+
+.chart-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  padding: 0 0.25rem;  // pequeño indent lateral
 }

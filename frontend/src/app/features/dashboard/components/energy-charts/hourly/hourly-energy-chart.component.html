@@ -1,6 +1,7 @@
-<!-- HOURLY -->
 <div class="chart-card">
-  <apx-chart [series]="hourlySeries" [chart]="hourlyChart" [xaxis]="hourlyXAxis" [dataLabels]="dataLabels"
-    [stroke]="stroke" [title]="hourlyTitle" [legend]="legend">
+  <h3 class="chart-title">Producción vs Consumo (Hoy - por hora)</h3>
+  <apx-chart [series]="hourlySeries" [chart]="hourlyChart" [xaxis]="hourlyXAxis" [yaxis]="hourlyYAxis"
+    [dataLabels]="dataLabels" [stroke]="stroke" [colors]="colors" [fill]="fill" [grid]="grid" [tooltip]="tooltip"
+    [legend]="legend">
   </apx-chart>
 </div>

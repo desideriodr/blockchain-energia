@@ -1,5 +1,16 @@
 <div class="chart-card">
-  <apx-chart [series]="chartSeries" [chart]="chart" [xaxis]="xaxis" [dataLabels]="dataLabels" [stroke]="stroke"
-    [title]="title" [legend]="legend">
+  <h3 class="chart-title">Ingresos vs Gastos (COP - Hoy)</h3>
+  <apx-chart
+    [series]="chartSeries"
+    [chart]="chart"
+    [xaxis]="xaxis"
+    [yaxis]="yaxis"
+    [dataLabels]="dataLabels"
+    [stroke]="stroke"
+    [colors]="colors"
+    [plotOptions]="plotOptions"
+    [grid]="grid"
+    [tooltip]="tooltip"
+    [legend]="legend">
   </apx-chart>
 </div>

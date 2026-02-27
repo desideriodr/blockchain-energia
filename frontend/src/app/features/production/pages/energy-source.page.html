@@ -16,13 +16,7 @@
 
     <div class="form-group">
       <label>Capacidad (kWh)</label>
-      <input
-        type="number"
-        [(ngModel)]="newCapacity"
-        name="capacity"
-        min="1"
-        required
-      />
+      <input type="number" [(ngModel)]="newCapacity" name="capacity" min="1" required />
     </div>
 
     <button type="submit" class="btn-primary">
@@ -49,27 +43,29 @@
         <td>{{ s.sourceType }}</td>
         <td>{{ s.capacityKw }} kWh</td>
         <td>
-          <span
-            class="status"
-            [class.active]="s.isActive"
-            [class.inactive]="!s.isActive"
-          >
-            {{ s.isActive ? 'Activa' : 'Inactiva' }}
+          <span class="status" [class.active]="s.isActive" [class.inactive]="!s.isActive">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M21 12h-2.962c-.21 0-.316 0-.405.042a.5.5 0 0 0-.201.173c-.061.088-.092.205-.155.44l-1.817 6.846c-.233.875-.349 1.313-.524 1.426a.435.435 0 0 1-.485-.002c-.175-.115-.288-.554-.514-1.43l-3.873-14.99c-.227-.876-.34-1.315-.515-1.43a.435.435 0 0 0-.485-.002c-.175.113-.291.55-.524 1.426l-1.817 6.845c-.063.236-.094.353-.154.44a.5.5 0 0 1-.202.174C6.278 12 6.173 12 5.962 12H3" />
+            </svg>{{ s.isActive ? 'Activa' : 'Inactiva' }}
           </span>
         </td>
         <td class="actions">
-          <button
-            class="btn-secondary"
-            (click)="toggle(s.id)"
-          >
-            {{ s.isActive ? 'Desactivar' : 'Activar' }}
-          </button>
+          <button class="btn-secondary" (click)="toggle(s.id)">
 
-          <button
-            class="btn-danger"
-            (click)="delete(s.id)"
-          >
-            Eliminar
+            <!-- Icono "desactivar" — enchufe desconectado -->
+            <svg *ngIf="s.isActive" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 512 512">
+              <path fill="currentColor" fill-rule="evenodd"
+                d="m109.72 221.26l37.711 37.712l25.065-25.064l30.17 30.17l-25.065 25.064l45.255 45.255l25.065-25.064l30.17 30.17l-25.065 25.064l37.713 37.712l-30.17 30.17l-15.085-15.085c-36.49 36.49-92.839 41.015-134.255 13.577l-36.25 36.247l-30.169-30.17l36.248-36.249c-27.438-41.416-22.913-97.765 13.577-134.255L79.55 251.43zM89.75 59.58l362.668 362.668l-30.17 30.17L59.58 89.75zm35.055 237.104c-24.994 24.994-24.994 65.516 0 90.51c24.1 24.1 62.641 24.962 87.773 2.582l2.736-2.582zM437.019 44.81l30.17 30.17l-46.915 46.916c27.438 41.416 22.913 97.765-13.577 134.255l15.085 15.085l-30.17 30.17l-181.02-181.02l30.17-30.17l15.086 15.085c36.49-36.49 92.839-41.015 134.254-13.576zm-148.266 88.079l-2.735 2.582l89.377 89.377c17.735-26.918 22.652-67.857 1.132-89.377c-24.1-24.1-62.641-24.961-87.774-2.582" />
+            </svg>
+
+            <!-- Icono "activar" — enchufe conectado -->
+            <svg *ngIf="!s.isActive" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+              <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"
+                d="M4.513 19.487c2.512 2.392 5.503 1.435 6.7.466c.618-.501.897-.825 1.136-1.065c.837-.777.784-1.555.24-2.177c-.219-.249-1.616-1.591-2.956-2.967c-.694-.694-1.172-1.184-1.582-1.58c-.547-.546-1.026-1.172-1.744-1.154c-.658 0-1.136.58-1.735 1.179c-.688.688-1.196 1.555-1.375 2.333c-.539 2.273.299 3.888 1.316 4.965Zm0 0L2 21.999M19.487 4.515c-2.513-2.394-5.494-1.42-6.69-.45c-.62.502-.898.826-1.138 1.066c-.837.778-.784 1.556-.239 2.178c.078.09.31.32.635.644m7.432-3.438c1.017 1.077 1.866 2.71 1.327 4.985c-.18.778-.688 1.645-1.376 2.334c-.598.598-1.077 1.179-1.735 1.179c-.718.018-1.09-.502-1.639-1.048m3.423-7.45L22 2m-5.936 9.964c-.41-.395-.994-.993-1.688-1.687c-.858-.882-1.74-1.75-2.321-2.325m4.009 4.012l-1.562 1.525m-3.99-3.984l1.543-1.553" />
+            </svg>
+
+            {{ s.isActive ? 'Desactivar' : 'Activar' }}
           </button>
         </td>
       </tr>

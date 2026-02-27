@@ -2,68 +2,104 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
+
+  @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 600px)  { grid-template-columns: 1fr; }
 }
 
 .kpi-card {
   background: #ffffff;
-  padding: 1.5rem;
-  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  &.energy {
+    &::before { background: #0f766e; }
+    .kpi-value { color: #0f766e; }
+    .icon      { color: #0f766e; background: rgba(15, 118, 110, 0.08); }
+  }
+
+  &.wallet {
+    &::before { background: #3b82f6; }
+    .kpi-value { color: #3b82f6; }
+    .icon      { color: #3b82f6; background: rgba(59, 130, 246, 0.08); }
+  }
+
+  &.buyer {
+    &::before { background: #f59e0b; }
+    .kpi-value { color: #f59e0b; }
+    .icon      { color: #f59e0b; background: rgba(245, 158, 11, 0.08); }
+  }
+
+  &.seller {
+    &::before { background: #8b5cf6; }
+    .kpi-value { color: #8b5cf6; }
+    .icon      { color: #8b5cf6; background: rgba(139, 92, 246, 0.08); }
+  }
 }
 
-/* Elevación suave */
-.kpi-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
-}
-
-/* Energía - Verde */
-.kpi-card.energy:hover {
-  background:#2ecc71;
-}
-
-/* Billetera - Azul */
-.kpi-card.wallet:hover {
-  background:#3498db;
-}
-
-/* Buyer - Naranja */
-.kpi-card.buyer:hover {
-  background:#f39c12;
-}
-
-/* Seller - Morado */
-.kpi-card.seller:hover {
-  background:#da7cff;
+// Fila superior: título + ícono
+.kpi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
 }
 
 .kpi-title {
-  font-size: 0.8rem;
-  color: #646464;
-  font-weight: 500;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex: 1;
+}
+
+.icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+
+  svg {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }
 
 .kpi-value {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  transition: transform 0.3s ease;
-}
+  letter-spacing: -0.5px;
+  transition: transform 0.2s ease;
 
-.kpi-card:hover .kpi-value {
-  transform: scale(1.08);
-}
-
-.kpi-value.positive {
-  color: #16a34a;
-}
-
-.kpi-value.negative {
-  color: #dc2626;
+  .kpi-card:hover & {
+    transform: scale(1.04);
+  }
 }

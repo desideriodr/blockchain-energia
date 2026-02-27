@@ -1,33 +1,57 @@
 <div class="kpi-grid">
 
-  <!-- Balance energético -->
   <div class="kpi-card energy">
-    <div class="kpi-title">Balance Energético Mensual</div>
-    <div class="kpi-value">
-      {{ energyMonthlyBalance | number:'1.0-2' }} kWh
+    <div class="kpi-header">
+      <div class="kpi-title">Balance Energético Mensual</div>
+      <span class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5">
+            <path d="M2 10c.78-3.816 3.67-6.87 7.406-7.91c.314-.087.47-.131.555-.038c.085.094.022.248-.102.558L9 4.5M14 2c3.816.78 6.87 3.67 7.91 7.406c.087.314.131.47.038.555c-.094.085-.248.022-.558-.102L19.5 9m2.5 5c-.78 3.816-3.67 6.87-7.406 7.91c-.314.087-.47.131-.555.038c-.085-.094-.022-.248.102-.558L15 19.5M10 22c-3.816-.78-6.87-3.67-7.91-7.406c-.087-.314-.131-.47-.038-.555c.094-.085.248-.022.558.102L4.5 15"/>
+            <path stroke-linejoin="round" d="M12 11.099c-1.313.9-2.901 2.68-3.5 5.401m.875-2.396c-2.072-4.794 2.108-6.411 5.289-6.591c.384-.022.576-.033.713.107c.138.14.13.34.114.738c-.131 3.316-1.453 7.878-6.116 5.746"/>
+          </g>
+        </svg>
+      </span>
     </div>
+    <div class="kpi-value">{{ energyMonthlyBalance | number:'1.0-2' }} kWh</div>
   </div>
 
-  <!-- Balance billetera -->
   <div class="kpi-card wallet">
-    <div class="kpi-title">Balance Billetera Mensual</div>
-    <div class="kpi-value">
-      {{ walletMonthlyBalance | currency:'COP':'symbol':'1.0-0' }}
+    <div class="kpi-header">
+      <div class="kpi-title">Balance Billetera Mensual</div>
+      <span class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M8 13.65V6h3v7.65l-1.5-1.4zm5 1.5V2h3v10.15zM3 18.6V10h3v5.6zm0 2.45l6.45-6.45L13 17.65l5.6-5.6H17v-2h5v5h-2v-1.6l-6.9 6.9l-3.55-3.05l-3.75 3.75z"/>
+        </svg>
+      </span>
     </div>
+    <div class="kpi-value">{{ walletMonthlyBalance | currency:'COP':'symbol':'1.0-0' }}</div>
   </div>
 
-  <!-- KPI condicional por rol -->
   <div class="kpi-card buyer">
-    <div class="kpi-title">Ofertas Kwh Contratadas</div>
-    <div class="kpi-value">
-      {{ buyerContracts }}
+    <div class="kpi-header">
+      <div class="kpi-title">Ofertas Kwh Contratadas</div>
+      <span class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12.5 2L10 6h4l-2.5 4M17 6c.943 0 1.414 0 1.707.293S19 7.057 19 8v2.5M7 6c-.943 0-1.414 0-1.707.293S5 7.057 5 8v2.5M20 13h-2c-.943 0-1.414 0-1.707.293S16 14.057 16 15v5c0 .943 0 1.414.293 1.707S17.057 22 18 22h2c.943 0 1.414 0 1.707-.293S22 20.943 22 20v-5c0-.943 0-1.414-.293-1.707S20.943 13 20 13m-4 6h6m-6-3h6M6 13H4c-.943 0-1.414 0-1.707.293S2 14.057 2 15v5c0 .943 0 1.414.293 1.707S3.057 22 4 22h2c.943 0 1.414 0 1.707-.293S8 20.943 8 20v-5c0-.943 0-1.414-.293-1.707S6.943 13 6 13m-4 6h6m-6-3h6"/>
+        </svg>
+      </span>
     </div>
+    <div class="kpi-value">{{ buyerContracts }}</div>
   </div>
 
   <div class="kpi-card seller">
-    <div class="kpi-title">Mis Contratos activos </div>
-    <div class="kpi-value">
-      {{ sellerContracts }}
+    <div class="kpi-header">
+      <div class="kpi-title">Mis Contratos Activos</div>
+      <span class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+          <g fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M2.5 12c0-4.23 0-6.345 1.198-7.747q.256-.3.555-.555C5.655 2.5 7.77 2.5 12 2.5s6.345 0 7.747 1.198q.3.256.555.555C21.5 5.655 21.5 7.77 21.5 12s0 6.345-1.198 7.747q-.256.3-.555.555C18.345 21.5 16.23 21.5 12 21.5s-6.345 0-7.747-1.198q-.3-.256-.555-.555C2.5 18.345 2.5 16.23 2.5 12Z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.129 11.598l3.999-5.39c.313-.422.899-.16.899.402v4.172c0 .336.23.609.514.609h1.944c.442 0 .678.618.386 1.011l-3.999 5.39c-.313.422-.899.16-.899-.402v-4.172c0-.336-.23-.609-.514-.609H8.515c-.441 0-.677-.618-.385-1.011"/>
+          </g>
+        </svg>
+      </span>
     </div>
+    <div class="kpi-value">{{ sellerContracts }}</div>
   </div>
+
 </div>

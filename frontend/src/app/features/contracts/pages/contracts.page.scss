@@ -1,53 +1,95 @@
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 1.5rem;
 
   h1 {
-    font-size: 2rem;
-    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.3rem;
   }
 
   p {
-    font-size: 1rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: #6b7280;
   }
 }
 
 .contracts.card {
-  padding: 1rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 
   table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 0.5rem;
 
-    th,
-    td {
-      padding: 0.6rem;
+    th, td {
+      padding: 0.75rem;
       text-align: left;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
     }
 
     th {
+      font-size: 0.8rem;
       font-weight: 600;
+      color: #4b5563;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
 
     .mono {
       font-family: monospace;
+      font-size: 0.8rem;
     }
 
     tr.row {
       cursor: pointer;
       transition: background-color 0.15s ease;
+
+      &:hover  { background-color: #f3f4f6; }
+      &.active { background-color: #eef4ff; }
     }
 
-    tr.row:hover {
-      background-color: #f5f7fa;
+    // Botón cancelar — SVG + texto alineados
+    td button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background-color: #fee2e2;
+      color: #b91c1c;
+      transition: background-color 0.2s ease;
+
+      svg {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+      }
+
+      &:hover:not(:disabled) {
+        background-color: #fecaca;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
     }
 
-    tr.row.active {
-      background-color: #eef4ff;
+    // Mensaje sin contratos
+    .no-contracts {
+      text-align: center;
+      padding: 2rem;
+      color: #9ca3af;
+      font-size: 0.9rem;
+      font-style: italic;
     }
   }
 }
@@ -55,15 +97,20 @@
 /* Detalle inline */
 app-contract-detail-inline {
   display: block;
-  margin-top: 8px;
-  padding: 16px;
-  background: #fafafa;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: #f9fafb;
   border-left: 4px solid #3b82f6;
-  border-radius: 4px;
+  border-radius: 0 6px 6px 0;
 }
 
 .detail-row {
   animation: expand 180ms ease-out;
+
+  td {
+    padding-top: 0;
+    padding-bottom: 0.75rem;
+  }
 }
 
 @keyframes expand {
@@ -71,7 +118,6 @@ app-contract-detail-inline {
     opacity: 0;
     transform: translateY(-4px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);

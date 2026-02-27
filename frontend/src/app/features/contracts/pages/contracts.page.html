@@ -21,9 +21,9 @@
             (click)="toggle(contract.id)" 
             [class.active]="contract.id === selectedContractId">
 
-          <td class="mono">{{ getFullName(contract.seller) }}</td>
-          <td class="mono">{{ getFullName(contract.buyer) }}</td>
-          <td class="mono">{{ contract.pricePerKwhCop | number:'1.0-0' }}</td>
+          <td>{{ getFullName(contract.seller) }}</td>
+          <td>{{ getFullName(contract.buyer) }}</td>
+          <td>{{ contract.pricePerKwhCop | number:'1.0-0' }}</td>
           <td>
             <button (click)="cancel(contract.id)" [disabled]="loading">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">

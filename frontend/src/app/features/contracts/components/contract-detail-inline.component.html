@@ -1,35 +1,44 @@
-<ng-container *ngIf="contract$ | async as contract; else loading">
+<ng-container *ngIf="contract$ | async; else loading">
 
   <div class="detail-wrapper">
 
-    <div class="summary">
-      <div><strong>ID:</strong> {{ contract.id }}</div>
-    </div>
-
     <h4>Consumos</h4>
 
-    <!-- Sin consumos -->
-    <div *ngIf="!contract.consumptions?.length" class="empty">
+    <div *ngIf="!allConsumptions.length" class="empty">
       No hay consumos registrados
     </div>
 
-    <!-- Tabla -->
-    <table *ngIf="contract.consumptions?.length" class="consumptions-table">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>kWh consumidos</th>
-          <th>Costo (Cop)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let c of contract.consumptions">
-          <td>{{ c.recordedAt | date:'short' }}</td>
-          <td>{{ c.energyKwhConsumed }}</td>
-          <td class="mono">{{ c.costCop }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <ng-container *ngIf="allConsumptions.length">
+
+      <table class="consumptions-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>kWh consumidos</th>
+            <th>Costo (COP)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of pagedConsumptions">
+            <td>{{ c.recordedAt | date:'short' }}</td>
+            <td>{{ c.energyKwhConsumed }}</td>
+            <td>{{ c.costCop }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Paginación -->
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button class="btn-ghost" (click)="prevPage()" [disabled]="page === 1">
+          Anterior
+        </button>
+        <span class="page-info">{{ page }} de {{ totalPages }}</span>
+        <button class="btn-ghost" (click)="nextPage()" [disabled]="page >= totalPages">
+          Siguiente
+        </button>
+      </div>
+
+    </ng-container>
 
   </div>
 

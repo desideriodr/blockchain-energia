@@ -134,11 +134,24 @@ button {
 }
 
 .btn-ghost {
-  background-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
   border: 1px solid #dcdfe6;
+  background: transparent;
   color: #444;
+  transition: background-color 0.2s ease;
 
-  &:hover { background-color: #f3f4f6; }
+  &:hover:not(:disabled) { background-color: #f3f4f6; }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 button:disabled {

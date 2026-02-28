@@ -1,20 +1,18 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
+import { IEnergyContractBlockchain, ENERGY_CONTRACT_BLOCKCHAIN_PORT } from 'infrastructure/blockchain/ports/energy-contracts-blockchain.port';
+
 import { DataSource } from 'typeorm';
 import { Decimal } from 'decimal.js';
-
-import {
-  ContractStatus,
-  EnergyContract,
-} from 'energy/energy-contracts/energy-contracts.entity';
-
-import { BlockchainService } from 'infrastructure/blockchain/blockchain.service';
-import { WalletTransactionService } from 'finance/wallet-transactions/wallet-transactions.service';
-import { EnergyConsumption } from './energy-consumption.entity';
-import { BlockchainSyncStatus } from './graphql/dto/energy-consumption.enums';
 import { Cron } from '@nestjs/schedule';
 
-/* ================= ACTION ENUM ================= */
+import { ContractStatus, EnergyContract } from 'energy/energy-contracts/energy-contracts.entity';
+import { EnergyConsumption } from './energy-consumption.entity';
 
+import { BlockchainSyncStatus } from './graphql/dto/energy-consumption.enums';
+
+import { WalletTransactionService } from 'finance/wallet-transactions/wallet-transactions.service';
+
+// ACTION ENUMS
 export enum ConsumptionAction {
   REPORT = 'REPORT',
   TERMINATE_EXPIRED = 'TERMINATE_EXPIRED',
@@ -22,8 +20,8 @@ export enum ConsumptionAction {
   SUSPEND_NO_FUNDS = 'SUSPEND_NO_FUNDS',
 }
 
-/* ================= RESULT TYPE ================= */
 
+// RESULT TYPE
 export type ReportConsumptionResult =
   | { action: ConsumptionAction.REPORT; consumption: EnergyConsumption }
   | { action: ConsumptionAction.TERMINATE_EXPIRED }
@@ -35,7 +33,8 @@ export type ReportConsumptionResult =
 export class EnergyConsumptionService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly blockchainService: BlockchainService,
+    @Inject(ENERGY_CONTRACT_BLOCKCHAIN_PORT)
+    private readonly blockchainService: IEnergyContractBlockchain,
     private readonly walletTxService: WalletTransactionService,
   ) { }
 
@@ -77,8 +76,7 @@ export class EnergyConsumptionService {
 
       const now = new Date();
 
-      /* ================= TERMINACIÓN POR VENCIMIENTO ================= */
-
+      /* TERMINACIÓN POR VENCIMIENTO */
       if (now > contract.endDate) {
         contract.status = ContractStatus.TERMINATED_TERMS_EXPIRED;
         contract.isActive = false;
@@ -91,8 +89,7 @@ export class EnergyConsumptionService {
 
       if (kwhConsumed <= 0) return null;
 
-      /* ================= VALIDACIÓN PRODUCCIÓN ================= */
-
+      /* VALIDACIÓN PRODUCCIÓN */
       if (new Decimal(sellerWallet.energyStored).lt(kwhConsumed)) {
         contract.status = ContractStatus.SUSPENDED_NO_PRODUCTION;
         contract.isActive = false;
@@ -107,8 +104,7 @@ export class EnergyConsumptionService {
       const feeCOP = totalCOP.mul(platformFeePercent).div(100);
       const netCOP = totalCOP.minus(feeCOP);
 
-      /* ================= VALIDACIÓN FONDOS ================= */
-
+      /* VALIDACIÓN FONDOS */
       if (new Decimal(buyerWallet.balanceCop).lt(totalCOP)) {
         contract.status = ContractStatus.SUSPENDED_INSUFFICIENT_FUNDS;
         contract.isActive = false;
@@ -119,8 +115,7 @@ export class EnergyConsumptionService {
         return { action: ConsumptionAction.SUSPEND_NO_FUNDS };
       }
 
-      /* ================= ACTUALIZAR BALANCES ================= */
-
+      /* ACTUALIZAR BALANCES */
       buyerWallet.balanceCop = new Decimal(buyerWallet.balanceCop)
         .minus(totalCOP)
         .toString();
@@ -135,8 +130,7 @@ export class EnergyConsumptionService {
 
       await manager.save([buyerWallet, sellerWallet]);
 
-      /* ================= CREAR CONSUMO (PENDING) ================= */
-
+      /* CREAR CONSUMO (PENDING) */
       const consumption = await manager.save(
         manager.create(EnergyConsumption, {
           contract,
@@ -164,8 +158,7 @@ export class EnergyConsumptionService {
       };
     });
 
-    /* ================= BLOCKCHAIN (FUERA DE TRANSACCIÓN SQL) ================= */
-
+    /* BLOCKCHAIN (FUERA DE TRANSACCIÓN SQL) */
     if (!result || !contractAddress) {
       return result;
     }

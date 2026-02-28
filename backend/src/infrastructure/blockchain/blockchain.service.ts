@@ -1,9 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ethers, NonceManager, parseUnits } from 'ethers';
 import * as energyArtifact from '../../../../smart-contracts/artifacts/contracts/EnergySupplyContract.sol/EnergySupplyContract.json';
+import { IEnergyContractBlockchain } from './ports/energy-contracts-blockchain.port';
 
+/* BlockchainService
+ * Arquitectura hexagonal - adaptador
+ * se encarga de comunicarse con el servicio de blockchain actual
+ * sin depender de el (puerto - adaptador)
+ */ 
 @Injectable()
-export class BlockchainService implements OnModuleInit {
+export class BlockchainService implements IEnergyContractBlockchain, OnModuleInit {
   private provider!: ethers.JsonRpcProvider;
   private signer!: NonceManager;
 
@@ -31,10 +37,9 @@ export class BlockchainService implements OnModuleInit {
     console.log('Oracle address:', await this.signer.getAddress());
   }
 
-  /* ========================================================= */
-  /*                      INTERNAL HELPER                      */
-  /* ========================================================= */
-
+  /*
+   * INTERNAL HELPER - funciones de calculo de valores como comisiones, consumos, etc 
+   */
   private getWriteContract(address: string) {
     return new ethers.Contract(address, energyArtifact.abi, this.signer);
   }
@@ -53,10 +58,9 @@ export class BlockchainService implements OnModuleInit {
     return receipt.hash;
   }
 
-  /* ========================================================= */
-  /*                          DEPLOY                           */
-  /* ========================================================= */
-
+  /*
+   * DEPLOY - despligue del contrato inteligente
+   */
   async deployEnergyContract(
     buyer: string,
     seller: string,
@@ -83,10 +87,9 @@ export class BlockchainService implements OnModuleInit {
     return await contract.getAddress();
   }
 
-  /* ========================================================= */
-  /*                      LIFECYCLE (WRITE)                    */
-  /* ========================================================= */
-
+  /*
+   * LIFECYCLE (WRITE) - funciones que cambian el estado del contrato y registra transacciones 
+   */
   async activateContract(contractAddress: string): Promise<string> {
     const contract = this.getWriteContract(contractAddress);
     return this.execute(() => contract.activate());
@@ -144,10 +147,7 @@ export class BlockchainService implements OnModuleInit {
     return this.execute(() => contract.terminateByExpiration());
   }
 
-  /* ========================================================= */
-  /*                          READ                             */
-  /* ========================================================= */
-
+  /*READ - lee el estado actual del contrato*/
   async getContractState(contractAddress: string) {
     const contract = this.getReadContract(contractAddress);
 

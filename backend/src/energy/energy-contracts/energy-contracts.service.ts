@@ -1,30 +1,23 @@
-import {
-  Injectable,
-  BadRequestException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import {Injectable, BadRequestException, InternalServerErrorException, Inject} from '@nestjs/common';
 import { DataSource, EntityManager, Repository } from 'typeorm';
-import { Decimal } from 'decimal.js';
-
-import {
-  EnergyOffer,
-  EnergyOfferStatus,
-} from '../energy-offer/energy-offer.entity';
-import {
-  EnergyContract,
-  ContractStatus,
-} from './energy-contracts.entity';
-import { Wallet } from '../../finance/wallet/wallet.entity';
-import { BlockchainService } from 'infrastructure/blockchain/blockchain.service';
-import { FinanceHelperService } from 'infrastructure/finance/finance-helper.service';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IEnergyContractBlockchain, ENERGY_CONTRACT_BLOCKCHAIN_PORT } from 'infrastructure/blockchain/ports/energy-contracts-blockchain.port';
+
+import { EnergyOffer, EnergyOfferStatus } from '../energy-offer/energy-offer.entity';
 import { EnergyConsumption } from 'energy/energy-consumption/energy-consumption.entity';
+import { EnergyContract, ContractStatus } from './energy-contracts.entity';
+import { Wallet } from '../../finance/wallet/wallet.entity';
+
+import { FinanceHelperService } from 'infrastructure/finance/finance-helper.service';
+
+
 
 @Injectable()
 export class EnergyContractService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly blockchainService: BlockchainService,
+    @Inject(ENERGY_CONTRACT_BLOCKCHAIN_PORT)
+    private readonly blockchainService: IEnergyContractBlockchain,
     private readonly financeHelper: FinanceHelperService,
     @InjectRepository(EnergyContract)
     private readonly contractRepo: Repository<EnergyContract>,
@@ -125,7 +118,7 @@ export class EnergyContractService {
 
   async contractOffer(userId: string, offerId: string): Promise<EnergyContract> {
     // ===============================
-    // 1️⃣ TRANSACCIÓN DB
+    // TRANSACCIÓN DB - las transacciones se registran primero en db y se confirma para asegurar integridad entre db y blockchain
     // ===============================
     const contract = await this.dataSource.transaction(async manager => {
       const offer = await manager.findOne(EnergyOffer, {
@@ -149,7 +142,7 @@ export class EnergyContractService {
         throw new BadRequestException('No puedes contratar tu propia oferta');
       }
 
-      // 🔹 Buscar contrato previo del mismo buyer + oferta
+      // Buscar contrato previo del mismo buyer + oferta
       let contract = await manager.findOne(EnergyContract, {
         where: { offerId: offer.id, buyerWallet: { id: buyerWallet.id } },
         relations: ['buyerWallet', 'sellerWallet'],
@@ -161,16 +154,16 @@ export class EnergyContractService {
       endDate.setFullYear(endDate.getFullYear() + 1);
 
       if (contract) {
-        // 🔹 Reactivar contrato existente si estaba inactivo o fallido
+        // Reactivar contrato existente si estaba inactivo o fallido
         contract.isActive = true;
         contract.status = ContractStatus.PENDING_BLOCKCHAIN;
         contract.startDate = startDate;
         contract.endDate = endDate;
 
-        // 🔹 Guardar inmediatamente antes de blockchain
+        // Guardar inmediatamente antes de blockchain
         await manager.save(contract);
       } else {
-        // 🔹 Crear contrato nuevo
+        // Crear contrato nuevo
         contract = manager.create(EnergyContract, {
           offerId: offer.id,
           sellerWallet,
@@ -185,13 +178,11 @@ export class EnergyContractService {
         await manager.save(contract);
       }
 
-      // 🔹 Devolver el contrato con relaciones
+      // Devolver el contrato con relaciones
       return this.findContractWithRelations(manager, contract.id);
     });
 
-    // ===============================
-    // 2️⃣ BLOCKCHAIN
-    // ===============================
+    // BLOCKCHAIN - registrado el contrato en BD se realiza el despligue
     try {
       const deployedAddress = await this.blockchainService.deployEnergyContract(
         contract.buyerWallet.address,
@@ -203,7 +194,7 @@ export class EnergyContractService {
 
       await this.blockchainService.activateContract(deployedAddress);
 
-      // 🔹 Actualizar estado DB solo después de confirmar blockchain
+      // Actualizar estado DB solo después de confirmar blockchain
       contract.contractAddress = deployedAddress;
       contract.status = ContractStatus.ACTIVE;
       contract.isActive = true;
@@ -213,7 +204,7 @@ export class EnergyContractService {
       return contract;
 
     } catch (error) {
-      // 🔹 En caso de fallo blockchain, marcar como FAILED
+      // En caso de fallo blockchain, marcar como FAILED
       contract.status = ContractStatus.FAILED;
       contract.isActive = false;
       await this.contractRepo.save(contract);
@@ -230,7 +221,7 @@ export class EnergyContractService {
     userId: string,
   ): Promise<EnergyContract> {
 
-    // 1️⃣ Buscar contrato con relaciones
+    // Paso 1. Buscar contrato con relaciones
     const contract = await this.contractRepo.findOne({
       where: { id: contractId },
       relations: [
@@ -245,7 +236,7 @@ export class EnergyContractService {
       throw new BadRequestException('Contrato no encontrado');
     }
 
-    // 2️⃣ Validar pertenencia
+    // Paso 2. Validar pertenencia
     const isBuyer = contract.buyerWallet.user.id === userId;
     const isSeller = contract.sellerWallet.user.id === userId;
 
@@ -253,7 +244,7 @@ export class EnergyContractService {
       throw new BadRequestException('No autorizado');
     }
 
-    // 3️⃣ Validar estado
+    // Paso 3. Validar estado
     if (contract.status !== ContractStatus.ACTIVE) {
       throw new BadRequestException(
         'Solo contratos activos pueden cancelarse',
@@ -266,19 +257,19 @@ export class EnergyContractService {
       );
     }
 
-    // 4️⃣ Determinar nuevo estado según actor
+    // Paso 4. Determinar nuevo estado según actor
     const newStatus = isBuyer
       ? ContractStatus.CANCELED_BY_BUYER
       : ContractStatus.CANCELED_BY_SELLER;
 
     try {
-      // 5️⃣ Cancelar en blockchain
+      // Paso 5. Cancelar en blockchain
       await this.blockchainService.cancelContract(
         contract.contractAddress,
         'cancelación voluntaria'
       );
 
-      // 6️⃣ Actualizar BD
+      // Paso 6. Actualizar BD
       await this.contractRepo.update(
         { id: contract.id },
         {
@@ -287,7 +278,7 @@ export class EnergyContractService {
         },
       );
 
-      // 7️⃣ Reconsultar contrato actualizado
+      // Paso 7. Reconsultar contrato actualizado
       const updatedContract = await this.contractRepo.findOne({
         where: { id: contract.id },
         relations: [

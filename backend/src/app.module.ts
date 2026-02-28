@@ -3,33 +3,52 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { GqlThrottlerGuard } from 'common/guards/gql-throttler.guard';
+import { APP_GUARD } from '@nestjs/core';
 import * as dotenv from 'dotenv';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { EnergyProduction } from './energy/energy-production/energy-production.entity';
+import { createProductionLoader } from './energy/energy-production/loaders/production.loader';
+
 import { BlockchainModule } from './infrastructure/blockchain/blockchain.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EnergySourceModule } from './energy/energy-source/energy-source.module';
-
-import { EnergyProduction } from './energy/energy-production/energy-production.entity';
-import { createProductionLoader } from './energy/energy-production/loaders/production.loader';
+import { EnergyProductionModule } from 'energy/energy-production/energy-production.module';
 import { EnergySimulationModule } from 'simulation/energy-simulation.module';
 import { EnergyOfferModule } from 'energy/energy-offer/energy-offer.module';
 import { EnergyContractModule } from 'energy/energy-contracts/energy-contracts.module';
 import { EnergyConsumptionModule } from 'energy/energy-consumption/energy-consumption.module';
 import { WalletModule } from 'finance/wallet/wallet.module';
-
-import { DashboardModule } from 'application/dashboard/dashboard.module';
-import { EnergyProductionModule } from 'energy/energy-production/energy-production.module';
 import { WalletTransactionsModule } from 'finance/wallet-transactions/wallet-transactions.module';
+import { DashboardModule } from 'application/dashboard/dashboard.module';
+
 
 dotenv.config();
 
+const isProd = process.env.NODE_ENV === 'production';
+
 @Module({
   imports: [
-    // ---------------- DATABASE ----------------
+    /* RATE LIMITING
+     * Patrón: proteción total y automatica de endpoints 
+     * ttl: ventana de tiempo (ms)
+     * limit: max request por ventana por IP
+     *  100 request/IP en producción
+     *  100 request/IP en desarrollo 
+    */
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: isProd ? 100 : 1000,
+      },
+    ]),
+
+    // DATABASE
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -38,18 +57,23 @@ dotenv.config();
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
       autoLoadEntities: true,
-      synchronize: true,
-      logging: true,
+      // synchronize: solo en desarrollo en produccion puede destruir datos al desplegar
+      synchronize: !isProd && process.env.DB_SYNC === 'true',
+      // logging: solo en desarrollo en producción expone datos en logs
+      logging: !isProd,
     }),
 
-    // ---------------- GRAPHQL ----------------
+    // GRAPHQL
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
       imports: [TypeOrmModule.forFeature([EnergyProduction])],
       inject: [getRepositoryToken(EnergyProduction)],
       useFactory: (pdRepo) => ({
         autoSchemaFile: true,
-        playground: true,
+        // playground e introspection: solo en desarrollo en producción expone schema completo 
+        playground: !isProd,
+        introspection: !isProd,
+
         path: '/graphql',
         context: ({ req }) => ({
           req,
@@ -60,30 +84,31 @@ dotenv.config();
       }),
     }),
 
-    // ---------------- SCHEDULER ----------------
+    // SCHEDULER
     ScheduleModule.forRoot(),
 
-    // ---------------- FEATURE MODULES ----------------
-    // ------------------- BLOCKCHAIN ----------------
+    // FEATURE MODULES
     BlockchainModule,
-    // ------------------- USER/AUTH -----------------
     UsersModule,
     AuthModule,
-    // ------------------ ENERGY -------------------
     EnergySourceModule,
     EnergyProductionModule,
     EnergySimulationModule,
     EnergyOfferModule,
     EnergyContractModule,
     EnergyConsumptionModule,
-    // ------------------ WALLET -------------------
     WalletModule,
-    WalletTransactionsModule, 
-    // ------------------ DASHBOARD ---------------
+    WalletTransactionsModule,
     DashboardModule
   ],
 
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: GqlThrottlerGuard,
+    },
+  ],
 })
-export class AppModule {}
+export class AppModule { }

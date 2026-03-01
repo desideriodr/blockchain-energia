@@ -26,148 +26,114 @@
 - [Scripts disponibles](#scripts-disponibles)
 - [Patrones de diseño implementados](#patrones-de-diseño-implementados)
 - [Estructura del proyecto](#estructura-del-proyecto)
+- [Tests](#tests)
 
 ---
 
 ## Arquitectura
 
-El sistema está compuesto por tres capas principales que se comunican entre sí:
+### Vista general del sistema
 
-```
-[Angular Frontend] ──GraphQL──▶ [NestJS Backend] ──ethers.js──▶ [Hardhat / Ethereum]
-                                       │
-                              ┌────────┴────────┐
-                         [PostgreSQL]        [Redis]
-```
-
-## Diagramas de Arquitectura
-
-### Vista General del Sistema
 ```mermaid
 graph TB
     U(["👤 Usuario Final"])
+
     subgraph SIS["Sistema Blockchain Energia"]
-        FE["🖥️ Angular Frontend\nSPA · Puerto 4200"]
-        BE["⚙️ NestJS Backend\nGraphQL API · Puerto 3000"]
-        SC["📜 Smart Contract\nSolidity · EnergySupply"]
+        FE["🖥️ Angular Frontend — Puerto 4200"]
+        BE["⚙️ NestJS Backend — Puerto 3000"]
+        SC["📜 Smart Contract — Solidity EnergySupply"]
     end
+
     subgraph INF["Infraestructura Docker"]
-        PG[("🐘 PostgreSQL\nPuerto 5432")]
-        RD[("🔴 Redis\nCache + BullMQ")]
-        HH["⛓️ Hardhat Node\nPuerto 8545"]
+        PG[("🐘 PostgreSQL — Puerto 5432")]
+        RD[("🔴 Redis — Cache y BullMQ")]
+        HH["⛓️ Hardhat Node — Puerto 8545"]
     end
-    U -->|"HTTPS"| FE
-    FE -->|"GraphQL over HTTP"| BE
-    BE -->|"TypeORM SQL"| PG
-    BE -->|"cache-manager BullMQ"| RD
-    BE -->|"ethers.js RPC"| HH
-    HH -->|"deploy / call"| SC
+
+    U -->|HTTPS| FE
+    FE -->|GraphQL over HTTP| BE
+    BE -->|TypeORM| PG
+    BE -->|cache-manager y BullMQ| RD
+    BE -->|ethers.js RPC| HH
+    HH -->|deploy y call| SC
 ```
 
-El backend implementa **Arquitectura Hexagonal (Ports & Adapters)**, separando la lógica de negocio de los detalles de infraestructura. La comunicación con la blockchain se abstrae detrás de la interfaz `IEnergyContractBlockchain`, lo que permite reemplazar el proveedor blockchain sin modificar los servicios de dominio.
+### Arquitectura hexagonal del backend
 
-### Diagrama de módulos
+El backend implementa el patrón **Ports and Adapters**. La lógica de negocio depende de interfaces (puertos), no de implementaciones concretas. La blockchain puede reemplazarse sin modificar los servicios de dominio.
 
-```
-DashboardModule ──▶ EnergyContractModule ──▶ ⬡ PORT ──▶ BlockchainModule
-                 ──▶ EnergyConsumptionModule        ──▶ Hardhat Node
-                 ──▶ WalletModule ──▶ CryptoModule
-                 ──▶ AppCacheModule ──▶ Redis
-
-SimulationScheduler ──addBulk──▶ BullMQ ──▶ ProductionWorker
-                                        ──▶ ConsumptionWorker
-```
-### Arquitectura Hexagonal del Backend
 ```mermaid
 graph TD
-    Dashboard["📊 DashboardModule\nCache Redis"]
-    EContract["📋 EnergyContractModule"]
-    EConsumption["⚡ EnergyConsumptionModule"]
-    EOffer["🏷️ EnergyOfferModule"]
-    ESource["🔋 EnergySourceModule"]
-    EProd["☀️ EnergyProductionModule\nDataLoader"]
-    Wallet["👛 WalletModule\nAES-256-GCM"]
-    WalletTx["💳 WalletTransactionsModule"]
-    PORT{{"⬡ IEnergyContractBlockchain\nPORT"}}
-    Blockchain["🔌 BlockchainModule\nAdapter ethers.js"]
-    Cache["🔴 AppCacheModule\nRedis fallback"]
-    Crypto["🔐 CryptoModule"]
-    FinanceH["💰 FinanceModule"]
-    Auth["🔑 AuthModule\nJWT"]
-    Users["👥 UsersModule"]
-    Scheduler["⏰ SimulationScheduler\nCron Producer"]
-    Workers["👷 Workers\nProduction + Consumption"]
-    BullQ[["BullMQ\nsimulation queues"]]
-    PG[("🐘 PostgreSQL")]
-    Redis[("🔴 Redis")]
-    Hardhat["⛓️ Hardhat Node"]
-    Dashboard --> Wallet
-    Dashboard --> EProd
-    Dashboard --> EConsumption
-    Dashboard --> EContract
-    Dashboard --> WalletTx
-    Dashboard --> Cache
-    EContract --> PORT
-    EConsumption --> PORT
-    PORT -.->|implementa| Blockchain
-    EContract --> FinanceH
-    EContract --> Wallet
-    EConsumption --> WalletTx
-    EOffer --> Wallet
-    ESource --> Users
-    Wallet --> Crypto
-    WalletTx --> Wallet
-    WalletTx --> Crypto
-    FinanceH --> Blockchain
-    Auth --> Users
-    Auth --> Blockchain
-    Scheduler -->|"addBulk"| BullQ
-    BullQ --> Workers
-    Workers --> EConsumption
-    Workers --> EProd
-    Blockchain --> Hardhat
-    Wallet --> PG
-    EContract --> PG
-    EConsumption --> PG
-    Cache --> Redis
-    BullQ --> Redis
+    subgraph Aplicacion["Aplicacion"]
+        D["DashboardModule"]
+    end
+
+    subgraph Dominio["Dominio"]
+        EC["EnergyContractModule"]
+        ECO["EnergyConsumptionModule"]
+        W["WalletModule"]
+        EP["EnergyProductionModule"]
+    end
+
+    subgraph Infraestructura["Infraestructura"]
+        PORT(["IEnergyContractBlockchain — PORT"])
+        BC["BlockchainModule"]
+        CA["AppCacheModule"]
+        CR["CryptoModule"]
+    end
+
+    subgraph Simulacion["Simulacion"]
+        SC["SimulationScheduler"] --> BQ[["BullMQ"]] --> WK["Workers"]
+    end
+
+    subgraph Externo["Externo"]
+        PG[("PostgreSQL")]
+        RD[("Redis")]
+        HH["Hardhat Node"]
+    end
+
+    D --> EC & ECO & EP & W & CA
+    EC & ECO --> PORT
+    PORT -.->|implementa| BC
+    W --> CR
+    WK --> ECO
+    BC --> HH
+    EC & W --> PG
+    CA & BQ --> RD
 ```
 
-### Flujo: Contratar Energía P2P
+### Flujo: contratar energía P2P
+
 ```mermaid
 sequenceDiagram
     actor Comprador
-    participant GQL as GraphQL API
-    participant SVC as EnergyContractService
+    participant BE as NestJS Backend
     participant DB as PostgreSQL
     participant PORT as IEnergyContractBlockchain
     participant BC as Hardhat Node
-    participant SC as Smart Contract
-    Comprador->>GQL: mutation contractOffer(offerId)
-    GQL->>SVC: contractOffer(userId, offerId)
-    rect rgb(13,25,45)
-        Note over SVC,DB: Transaccion DB ACID
-        SVC->>DB: findOne EnergyOffer LOCK pessimistic_write
-        DB-->>SVC: offer OPEN
-        SVC->>DB: findOne buyerWallet + sellerWallet
-        SVC->>DB: save EnergyContract PENDING_BLOCKCHAIN
-        DB-->>SVC: contract con wallets
+
+    Comprador->>BE: mutation contractOffer(offerId)
+
+    rect rgb(20, 40, 80)
+        Note over BE,DB: Transaccion DB ACID
+        BE->>DB: findOne EnergyOffer con LOCK
+        BE->>DB: findOne buyerWallet y sellerWallet
+        BE->>DB: save EnergyContract PENDING_BLOCKCHAIN
     end
-    rect rgb(25,13,45)
-        Note over SVC,SC: Registro Blockchain
-        SVC->>PORT: deployEnergyContract(buyer, seller, price, dates)
-        PORT->>BC: ethers.js RPC
-        BC->>SC: deploy EnergySupply
-        SC-->>BC: contractAddress
-        BC-->>PORT: txHash
-        PORT-->>SVC: contractAddress
-        SVC->>PORT: activateContract(contractAddress)
-        PORT->>BC: activate()
-        BC-->>SVC: confirmed
+
+    rect rgb(40, 20, 80)
+        Note over BE,BC: Registro en Blockchain
+        BE->>PORT: deployEnergyContract(buyer, seller, price, dates)
+        PORT->>BC: ethers.js RPC deploy EnergySupply
+        BC-->>PORT: contractAddress
+        BE->>PORT: activateContract(contractAddress)
+        BC-->>BE: confirmed
     end
-    SVC->>DB: update contract ACTIVE + contractAddress
-    GQL-->>Comprador: id contractAddress status ACTIVE
+
+    BE->>DB: update contract ACTIVE
+    BE-->>Comprador: contractAddress y status ACTIVE
 ```
+
 ---
 
 ## Tecnologías
@@ -176,15 +142,15 @@ sequenceDiagram
 |---|---|---|
 | Frontend | Angular | 21 |
 | Backend | NestJS | 10 |
-| API | GraphQL (Apollo) | 4 |
+| API | GraphQL — Apollo | 4 |
 | ORM | TypeORM | 0.3 |
-| Smart Contracts | Solidity + Hardhat | 0.8 / 3 |
+| Smart Contracts | Solidity y Hardhat | 0.8 / 3 |
 | Base de datos | PostgreSQL | 16 |
-| Caché / Colas | Redis + BullMQ | 7 |
-| Cifrado | AES-256-GCM (Node crypto) | — |
+| Caché y Colas | Redis y BullMQ | 7 |
+| Cifrado | AES-256-GCM — Node crypto | — |
 | Blockchain client | ethers.js | 6 |
 | Contenedores | Docker Compose | v5 |
-| Tests | Jest + @nestjs/testing | 30 |
+| Tests | Jest y @nestjs/testing | 30 |
 
 ---
 
@@ -263,7 +229,7 @@ La aplicación estará disponible en `http://localhost:4200`.
 
 ## Variables de entorno
 
-Crea el archivo `backend/.env` con las siguientes variables:
+Crea el archivo `backend/.env` a partir de `backend/.env.example`:
 
 ```env
 # Base de datos
@@ -277,11 +243,10 @@ DB_SYNC=true
 # Redis
 REDIS_URL=redis://localhost:6379
 
-# JWT — mínimo 32 caracteres
+# JWT — minimo 32 caracteres
 JWT_SECRET=cambia_esto_por_un_secreto_seguro_minimo_32_chars
 
 # Cifrado de wallets — exactamente 32 caracteres
-# CRÍTICO: no cambiar en producción, perderías las wallets cifradas
 WALLET_ENCRYPTION_KEY=cambia_esto_exactamente_32_chars!
 
 # Blockchain
@@ -294,7 +259,7 @@ PORT=3000
 FRONTEND_URL=http://localhost:4200
 ```
 
-> ⚠️ La cuenta de `PLATFORM_PRIVATE_KEY` corresponde a la cuenta #0 de Hardhat. Nunca usar en producción.
+> ⚠️ `PLATFORM_PRIVATE_KEY` corresponde a la cuenta #0 de Hardhat. Nunca usar en producción.
 
 ---
 
@@ -304,60 +269,53 @@ FRONTEND_URL=http://localhost:4200
 
 ```bash
 npm run start:dev     # Desarrollo con hot-reload
-npm run start:prod    # Producción (requiere build previo)
+npm run start:prod    # Produccion — requiere build previo
 npm run build         # Compilar TypeScript
-npm test              # Ejecutar tests unitarios
+npm test              # Tests unitarios
 npm run test:cov      # Tests con reporte de cobertura
-npm run test:watch    # Tests en modo watch
 ```
 
 ### Docker
 
 ```bash
-docker compose up -d        # Levantar infraestructura (PostgreSQL + Redis)
-docker compose down         # Apagar (datos conservados en volumes)
-docker compose down -v      # Apagar y eliminar datos
+docker compose up -d        # Levantar PostgreSQL y Redis
+docker compose down         # Apagar — datos conservados en volumes
+docker compose down -v      # Apagar y eliminar todos los datos
 docker compose ps           # Estado de los servicios
-docker compose logs redis   # Logs de un servicio específico
 ```
 
 ### Smart Contracts
 
 ```bash
-npx hardhat node            # Levantar nodo local
-npx hardhat compile         # Compilar contratos
-npx hardhat test            # Tests de contratos
-npx hardhat run scripts/deploy.ts --network localhost  # Desplegar
+npx hardhat node                                              # Nodo local
+npx hardhat compile                                           # Compilar contratos
+npx hardhat test                                              # Tests de contratos
+npx hardhat run scripts/deploy.ts --network localhost         # Desplegar
 ```
 
 ---
 
 ## Patrones de diseño implementados
 
-### Arquitectura Hexagonal (Ports & Adapters)
+### Arquitectura hexagonal — Ports and Adapters
 
-La lógica de negocio en `EnergyContractService` y `EnergyConsumptionService` depende de la interfaz `IEnergyContractBlockchain` (puerto), no de `BlockchainService` directamente. Esto permite mockear la blockchain en los tests sin necesitar un nodo real.
-
-```
-EnergyContractService ──▶ IEnergyContractBlockchain  ◀── BlockchainService
-        (dominio)               (puerto)                    (adaptador)
-```
+`EnergyContractService` y `EnergyConsumptionService` dependen de la interfaz `IEnergyContractBlockchain` (puerto), no de `BlockchainService` directamente. Esto permite mockear la blockchain en tests sin nodo real y reemplazar el proveedor blockchain sin tocar la lógica de negocio.
 
 ### Cache-Aside con Redis
 
-El `DashboardService` implementa el patrón cache-aside en sus 6 métodos de agregación, con TTLs diferenciados según la volatilidad del dato (5 min para datos en tiempo real, 15 min para datos históricos). Incluye fallback automático a memoria si Redis no está disponible.
+`DashboardService` aplica cache-aside en 6 métodos de agregación con TTLs según volatilidad del dato: 5 minutos para KPIs en tiempo real, 15 minutos para históricos mensuales. Fallback automático a memoria si Redis no está disponible.
 
-### DataLoader (prevención de N+1)
+### DataLoader — prevención de N+1
 
-Los resolvers GraphQL de `EnergyContract` y `EnergyProduction` usan DataLoader para batching de queries. En lugar de ejecutar 1 query por contrato al resolver `consumptions`, se ejecuta una única query con `WHERE contractId IN (...)`.
+Los resolvers GraphQL de contratos y producción usan DataLoader para batching. N contratos con consumptions pasa de N queries individuales a una sola query `WHERE contractId IN (...)`.
 
 ### Producer/Consumer con BullMQ
 
-Las simulaciones de producción y consumo energético se procesan fuera del hilo principal. El `SimulationScheduler` solo encola jobs con `addBulk()` y retorna inmediatamente. Los `ProductionWorker` y `ConsumptionWorker` procesan los jobs en paralelo.
+`SimulationScheduler` solo encola jobs con `addBulk()` y retorna inmediatamente. `ProductionWorker` y `ConsumptionWorker` procesan los jobs en paralelo fuera del hilo principal, sin bloquear la API.
 
 ### Cifrado AES-256-GCM
 
-Las claves privadas de las wallets Ethereum se cifran con AES-256-GCM antes de persistir en base de datos. El formato almacenado es `iv:authTag:encryptedData`, donde el `authTag` garantiza la integridad del ciphertext (detecta manipulaciones).
+Las claves privadas de wallets Ethereum se cifran antes de persistir en base de datos. Formato almacenado: `iv:authTag:encryptedData`. El `authTag` de GCM detecta cualquier manipulación del ciphertext.
 
 ---
 
@@ -365,23 +323,18 @@ Las claves privadas de las wallets Ethereum se cifran con AES-256-GCM antes de p
 
 ```
 blockchain-energia/
-├── backend/                    # API NestJS
+├── backend/
 │   └── src/
-│       ├── application/        # Capa de aplicación (Dashboard)
-│       ├── auth/               # Autenticación JWT
-│       ├── energy/             # Dominio energía
-│       │   ├── energy-contracts/
-│       │   ├── energy-consumption/
-│       │   ├── energy-offer/
-│       │   ├── energy-production/
-│       │   └── energy-source/
-│       ├── finance/            # Dominio finanzas (Wallet)
-│       ├── infrastructure/     # Adaptadores (Blockchain, Redis, Crypto)
-│       ├── simulation/         # BullMQ workers y scheduler
+│       ├── application/        # Dashboard y KPIs
+│       ├── auth/               # JWT y guards
+│       ├── energy/             # Dominio — contratos, consumo, ofertas, produccion, fuentes
+│       ├── finance/            # Dominio — wallets y transacciones
+│       ├── infrastructure/     # Adaptadores — blockchain, Redis, crypto
+│       ├── simulation/         # BullMQ scheduler y workers
 │       └── users/
 ├── frontend/                   # SPA Angular
-├── smart-contracts/            # Contratos Solidity + Hardhat
-└── docker-compose.yml          # PostgreSQL + Redis
+├── smart-contracts/            # Contratos Solidity y scripts Hardhat
+└── docker-compose.yml
 ```
 
 ---
@@ -389,15 +342,16 @@ blockchain-energia/
 ## Tests
 
 ```bash
-cd backend && npm test
+cd backend
+npm test              # Ejecutar
+npm run test:cov      # Con cobertura
 ```
 
 ```
-Test Suites: 3 passed
-Tests:       36 passed
-Snapshots:   0 total
+Test Suites : 3 passed
+Tests       : 36 passed
 
-CryptoService     → 100% cobertura (15 casos)
-WalletService     → 100% cobertura (8 casos)
-EnergyContractService → cancelContract + findById (12 casos)
+CryptoService          100% — constructor, encrypt, decrypt, seguridad
+WalletService          100% — crear wallet, cifrado, wallet del sistema
+EnergyContractService   48% — cancelContract, findById, acceso blockchain
 ```

@@ -62,6 +62,7 @@
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^10.4.22",
     "@types/axios": "^0.9.36",
     "@types/bcrypt": "^6.0.0",
     "@types/cache-manager": "^4.0.6",
@@ -102,6 +103,16 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^infrastructure/(.*)$": "<rootDir>/infrastructure/$1",
+      "^energy/(.*)$": "<rootDir>/energy/$1",
+      "^finance/(.*)$": "<rootDir>/finance/$1",
+      "^auth/(.*)$": "<rootDir>/auth/$1",
+      "^users/(.*)$": "<rootDir>/users/$1",
+      "^simulation/(.*)$": "<rootDir>/simulation/$1",
+      "^application/(.*)$": "<rootDir>/application/$1",
+      "^common/(.*)$": "<rootDir>/common/$1"
+    }
   }
 }

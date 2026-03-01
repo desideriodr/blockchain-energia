@@ -36,18 +36,18 @@
 
 ```mermaid
 graph TB
-    U(["👤 Usuario Final"])
+    U(["Usuario Final"])
 
     subgraph SIS["Sistema Blockchain Energia"]
-        FE["🖥️ Angular Frontend — Puerto 4200"]
-        BE["⚙️ NestJS Backend — Puerto 3000"]
-        SC["📜 Smart Contract — Solidity EnergySupply"]
+        FE["Angular Frontend — Puerto 4200"]
+        BE["NestJS Backend — Puerto 3000"]
+        SC["Smart Contract — Solidity EnergySupply"]
     end
 
     subgraph INF["Infraestructura Docker"]
-        PG[("🐘 PostgreSQL — Puerto 5432")]
-        RD[("🔴 Redis — Cache y BullMQ")]
-        HH["⛓️ Hardhat Node — Puerto 8545"]
+        PG[("PostgreSQL — Puerto 5432")]
+        RD[("Redis — Cache y BullMQ")]
+        HH["Hardhat Node — Puerto 8545"]
     end
 
     U -->|HTTPS| FE
@@ -56,6 +56,14 @@ graph TB
     BE -->|cache-manager y BullMQ| RD
     BE -->|ethers.js RPC| HH
     HH -->|deploy y call| SC
+
+    style U  fill:#1a2235,stroke:#00d4ff,color:#fff
+    style FE fill:#1a3d2a,stroke:#10b981,color:#fff
+    style BE fill:#1a2d4a,stroke:#3b82f6,color:#fff
+    style SC fill:#2d1a4d,stroke:#7c3aed,color:#fff
+    style PG fill:#2d1a4d,stroke:#9c27b0,color:#fff
+    style RD fill:#3d1a1a,stroke:#ef4444,color:#fff
+    style HH fill:#3d2a0d,stroke:#f59e0b,color:#fff
 ```
 
 ### Arquitectura hexagonal del backend
@@ -100,12 +108,12 @@ graph TD
     CA --> RD
     BQ --> RD
 
-    classDef app    fill:#1a3a5c,stroke:#3b82f6,color:#fff
-    classDef dom    fill:#1a3d2a,stroke:#10b981,color:#fff
-    classDef infra  fill:#3d2a0d,stroke:#f59e0b,color:#fff
-    classDef sim    fill:#2a1a3d,stroke:#8b5cf6,color:#fff
-    classDef ext    fill:#1f2937,stroke:#4b5563,color:#9ca3af
-    classDef port   fill:#2d1a4d,stroke:#7c3aed,color:#e9d5ff
+    classDef app   fill:#1a3a5c,stroke:#3b82f6,color:#fff
+    classDef dom   fill:#1a3d2a,stroke:#10b981,color:#fff
+    classDef infra fill:#3d2a0d,stroke:#f59e0b,color:#fff
+    classDef sim   fill:#2a1a3d,stroke:#8b5cf6,color:#fff
+    classDef ext   fill:#1f2937,stroke:#4b5563,color:#9ca3af
+    classDef port  fill:#2d1a4d,stroke:#7c3aed,color:#e9d5ff
 
     class D app
     class EC,ECO,EP,W dom

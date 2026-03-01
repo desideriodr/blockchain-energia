@@ -1,24 +1,32 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Inject } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 
-import { DashboardKPI } from "../analytics/graphql/dashboard-kpi.graphql";
-import { TimeSeriesPoint } from "./graphql/time-series.graphql";
-import { DashboardHome } from "./graphql/dashboard-home.graphql";
+import { cacheKey, CACHE_TTL } from "infrastructure/cache/cache.constants";
 
-import { WalletService } from "finance/wallet/wallet.service";
 import { EnergyProduction } from "energy/energy-production/energy-production.entity";
 import { EnergyConsumption } from "energy/energy-consumption/energy-consumption.entity";
 import { WalletTransactions } from "finance/wallet-transactions/wallet-transactions.entity";
 import { EnergySource } from "energy/energy-source/energy-source.entity";
-import { ContractsCount, DailyEnergy, EnergySourceDistribution, HourlyEnergy, HourlyFinancial } from "./graphql/dashboard-energy-financial";
 import { EnergyContract } from "energy/energy-contracts/energy-contracts.entity";
+
+import { DashboardKPI } from "../analytics/graphql/dashboard-kpi.graphql";
+import { TimeSeriesPoint } from "./graphql/time-series.graphql";
+import { DashboardHome } from "./graphql/dashboard-home.graphql";
+import { ContractsCount, DailyEnergy, EnergySourceDistribution, HourlyEnergy, HourlyFinancial } from "./graphql/dashboard-energy-financial.graphql";
+
+import { WalletService } from "finance/wallet/wallet.service";
 
 @Injectable()
 export class DashboardService {
 
   constructor(
     private readonly walletService: WalletService,
+
+    @Inject(CACHE_MANAGER)
+    private readonly cache: Cache,
 
     @InjectRepository(EnergyProduction)
     private readonly pdRepo: Repository<EnergyProduction>,
@@ -37,6 +45,10 @@ export class DashboardService {
   ) { }
 
   async getDashboardKPI(userId: string): Promise<DashboardKPI> {
+    const key = cacheKey.dashboardKpi(userId);
+    const cached = await this.cache.get<DashboardKPI>(key);
+    if (cached) return cached;
+
     const wallet = await this.walletService.getWalletByUser(userId);
 
     const totalTransactions = await this.txRepo.count({
@@ -55,17 +67,19 @@ export class DashboardService {
       .where('es.userId = :userId', { userId })
       .getRawOne();
 
-    return {
+    const result = {
       totalTransactions,
       totalEnergyTransferred,
       totalEnergyProduced: Number(produced.sum),
     };
+
+    await this.cache.set(key, result, CACHE_TTL.DASHBOARD_KPI);
+    return result;
   }
 
   async getDashboardHome(userId: string): Promise<DashboardHome> {
     const kpis = await this.getDashboardKPI(userId);
 
-    // 🔹 Aquí puedes luego poner lógica real por fechas
     const energySeries: TimeSeriesPoint[] = [];
     const transactionSeries: TimeSeriesPoint[] = [];
 
@@ -76,11 +90,12 @@ export class DashboardService {
     };
   }
 
-  /* ============================================================
-     HOURLY FINANCIAL
-  ============================================================ */
-
+  /* HOURLY FINANCIAL - movimientos financieros x hora */
   async getHourlyFinancial(userId: string): Promise<HourlyFinancial[]> {
+    const key = cacheKey.hourlyFinancial(userId);
+    const cached = await this.cache.get<HourlyFinancial[]>(key);
+    if (cached) return cached;
+
     const wallet = await this.walletService.getWalletByUser(userId);
     const address = wallet.address;
 
@@ -115,7 +130,9 @@ export class DashboardService {
       .orderBy(`DATE_TRUNC('hour', wt."createdAt")`, 'ASC')
       .getRawMany();
 
-    return this.fillMissingHours(raw);
+    const result = this.fillMissingHours(raw);
+    await this.cache.set(key, result, CACHE_TTL.HOURLY_FINANCIAL);
+    return result;
   }
 
   private fillMissingHours(data: any[]) {
@@ -150,11 +167,12 @@ export class DashboardService {
     return result;
   }
 
-  /* ============================================================
-     HOURLY ENERGY (Hoy)
-  ============================================================ */
-
+  /* HOURLY ENERGY (Hoy) - produccion/consumo de energia diaria */
   async getHourlyEnergy(userId: string): Promise<HourlyEnergy[]> {
+    const key = cacheKey.hourlyEnergy(userId);
+    const cached = await this.cache.get<HourlyEnergy[]>(key);
+    if (cached) return cached;
+
     const production = await this.pdRepo
       .createQueryBuilder('pd')
       .innerJoin('pd.energySource', 'es')
@@ -176,11 +194,7 @@ export class DashboardService {
     const prodMap = new Map(production.map(p => [p.hour, Number(p.production)]));
     const consMap = new Map(consumption.map(c => [c.hour, Number(c.consumption)]));
 
-    const result: {
-      hour: string;
-      productionKwh: number;
-      consumptionKwh: number;
-    }[] = [];
+    const result: HourlyEnergy[] = [];
 
     for (let i = 0; i < 24; i++) {
       const label = `${i.toString().padStart(2, '0')}:00`;
@@ -191,14 +205,16 @@ export class DashboardService {
       });
     }
 
+    await this.cache.set(key, result, CACHE_TTL.HOURLY_ENERGY);
     return result;
   }
 
-  /* ============================================================
-     MONTHLY ENERGY (por día)
-  ============================================================ */
-
+  /* MONTHLY ENERGY (por día) - produccion/consumo de energia mensual */
   async getMonthlyEnergy(userId: string): Promise<DailyEnergy[]> {
+    const key = cacheKey.monthlyEnergy(userId);
+    const cached = await this.cache.get<DailyEnergy[]>(key);
+    if (cached) return cached;
+
     const production = await this.pdRepo
       .createQueryBuilder('pd')
       .innerJoin('pd.energySource', 'es')
@@ -226,11 +242,7 @@ export class DashboardService {
       now.getMonth() + 1,
       0
     ).getDate();
-    const result: {
-      day: string;
-      productionKwh: number;
-      consumptionKwh: number;
-    }[] = [];
+    const result: DailyEnergy[] = [];
 
     const year = now.getFullYear();
     const month = now.getMonth();
@@ -246,14 +258,16 @@ export class DashboardService {
       });
     }
 
+    await this.cache.set(key, result, CACHE_TTL.MONTHLY_ENERGY);
     return result;
   }
 
-  /* ============================================================
-     SOURCE DISTRIBUTION
-  ============================================================ */
-
+  /*SOURCE DISTRIBUTION - produccion clasificada por su fuente de energia*/
   async getSourceDistribution(userId: string): Promise<EnergySourceDistribution[]> {
+    const key = cacheKey.sourceDistribution(userId);
+    const cached = await this.cache.get<EnergySourceDistribution[]>(key);
+    if (cached) return cached;
+
     const raw = await this.pdRepo
       .createQueryBuilder('pd')
       .innerJoin('pd.energySource', 'es')
@@ -265,24 +279,28 @@ export class DashboardService {
       .addGroupBy('es.capacityKw')
       .getRawMany();
 
-    return raw.map(r => ({
+    const result = raw.map(r => ({
       sourceType: r.sourceType,
       productionKwh: Number(r.production),
       capacityKw: Number(r.capacity),
     }));
+
+    await this.cache.set(key, result, CACHE_TTL.SOURCE_DISTRIBUTION);
+    return result;
   }
 
-  /* ============================================================
-     CONTRACTS COUNT
-  ============================================================ */
+  /* CONTRACTS COUNT - conteo de contractos activos y offertas publicadas */
+  async getContractsCount(userId: string): Promise<ContractsCount[]> {
+    const key = cacheKey.contractsCount(userId);
+    const cached = await this.cache.get<ContractsCount[]>(key);
+    if (cached) return cached;
 
-  async getContractsCount(userId:string): Promise<ContractsCount[]> {
     const wallet = await this.walletService.getWalletByUser(userId);
     const walletId = wallet.id;
 
     const raw = await this.contractRepo
-    .createQueryBuilder('ec')
-    .select(`
+      .createQueryBuilder('ec')
+      .select(`
         SUM(
           CASE 
             WHEN ec."sellerWalletId" = :id 
@@ -300,27 +318,28 @@ export class DashboardService {
           END
         )
       `, 'activeContracts')
-    .where(`ec.status = status`)
+      .where(`ec.status = status`)
       .andWhere(`
         ec."sellerWalletId" = :id 
         OR ec."buyerWalletId" = :id
       `)
       .setParameter('id', walletId)
       .setParameter('status', "ACTIVE")
-    .groupBy('ec.status')
-    .getRawMany();
+      .groupBy('ec.status')
+      .getRawMany();
 
-    return raw.map(r => ({
+    const result = raw.map(r => ({
       contractedOffers: r.contractedOffers,
       activeContracts: r.activeContracts
     }));
 
+    await this.cache.set(key, result, CACHE_TTL.CONTRACTS_COUNT);
+    return result;
   }
 
-  /* ============================================================
-     MAIN ENTRY
-  ============================================================ */
-
+  /* MAIN ENTRY - todo el dashboard se construye con esta funcion
+   * asi que podemos agregar o quitar queries
+   * solo con declarar o no la funcion get<something>(userid) correspondiente */
   async getEnergyFinancialDashboard(userId: string) {
     const [hourlyFinancial, hourlyEnergy, monthlyEnergy, sourceDistribution, contractsCount] =
       await Promise.all([

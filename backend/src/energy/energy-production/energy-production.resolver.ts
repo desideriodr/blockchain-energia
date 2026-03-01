@@ -1,12 +1,14 @@
-import { Resolver, Query } from '@nestjs/graphql';
+import { Resolver, Query, Context } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
-
 import { GqlAuthGuard } from '../../auth/gql-auth.guard';
 import { CurrentUser } from '../../auth/current-user.decorator';
+
 import { User } from '../../users/user.entity';
 
-import { EnergyProductionService } from './energy-production.service';
 import { ProductionDashboardGQL } from '../../application/dashboard/graphql/dashboard-production.graphql';
+
+import { EnergyProductionService } from './energy-production.service';
+
 
 @Resolver()
 export class EnergyProductionResolver {
@@ -18,8 +20,9 @@ export class EnergyProductionResolver {
   @Query(() => ProductionDashboardGQL)
   productionDashboard(
     @CurrentUser() user: User,
+    @Context() ctx,
   ) {
-    return this.productionService.getProductionDashboard(user);
+    const loader = ctx?.loaders?.productionBySourceLoader ?? null;
+    return this.productionService.getProductionDashboard(user, loader);
   }
-
 }

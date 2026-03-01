@@ -1,15 +1,16 @@
 import { Resolver, Mutation, Args, Context, Query, ResolveField, Parent } from '@nestjs/graphql';
 import { NotFoundException, UseGuards } from '@nestjs/common';
-
-import { EnergyContractService } from './energy-contracts.service';
-import { EnergyContractGQL } from './graphql/energy-contract.graphql';
-import { EnergyContract } from './energy-contracts.entity';
 import { GqlAuthGuard } from '../../auth/gql-auth.guard';
-import { ContractEnergyInput } from './graphql/inputs/contract-energy.input';
-import { EnergyConsumptionGQL } from 'energy/energy-consumption/graphql/energy-consumption.graphql';
-import { UserContractsGQL } from './graphql/user-contracts.graphql';
 import { CurrentUser } from 'auth/current-user.decorator';
 
+import { EnergyContract } from './energy-contracts.entity';
+
+import { EnergyConsumptionGQL } from 'energy/energy-consumption/graphql/energy-consumption.graphql';
+import { EnergyContractGQL } from './graphql/energy-contract.graphql';
+import { UserContractsGQL } from './graphql/user-contracts.graphql';
+import { ContractEnergyInput } from './graphql/inputs/contract-energy.input';
+
+import { EnergyContractService } from './energy-contracts.service';
 
 @Resolver(() => EnergyContractGQL)
 export class EnergyContractResolver {
@@ -20,13 +21,10 @@ export class EnergyContractResolver {
   @UseGuards(GqlAuthGuard)
   @ResolveField(() => [EnergyConsumptionGQL])
   async consumptions(@Parent() contract: EnergyContractGQL, @Context() ctx) {
-    const userId = ctx.req.user.id;
-    return this.service.findConsumptionsByContract(contract.id, userId);
+    return ctx.loaders.consumtionsLoader.load(contract.id);
   }
 
-  /**
-   * Contratar una oferta energética P2P
-   */
+  /* Contratar una oferta energética P2P */
   @UseGuards(GqlAuthGuard)
   @Mutation(() => EnergyContractGQL)
   async contractOffer(
@@ -84,7 +82,7 @@ export class EnergyContractResolver {
     };
   }
 
-
+  /* getEnergyContracts - Retorna los contratos por usuario */
   @UseGuards(GqlAuthGuard)
   @Query(() => [UserContractsGQL])
   async getEnergyContracts(@Context() ctx): Promise<UserContractsGQL[]> {
@@ -127,6 +125,7 @@ export class EnergyContractResolver {
     };
   }
 
+  /* getContractById - Retorna los contratos por Id  */
   @UseGuards(GqlAuthGuard)
   @Query(() => EnergyContractGQL, { name: 'energyContract' })
   async getContractById(
@@ -144,6 +143,7 @@ export class EnergyContractResolver {
     return this.toGQL(contract);
   }
 
+  /* cancelContract - cancela el contrato por Id */ 
   @UseGuards(GqlAuthGuard)
   @Mutation(() => EnergyContractGQL)
   async cancelContract(

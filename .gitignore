@@ -1,6 +1,7 @@
 # Logs
 logs
 *.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -36,6 +37,8 @@ bower_components
 .lock-wscript
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
+dist/
+build/
 build/Release
 
 # Dependency directories
@@ -74,18 +77,33 @@ web_modules/
 
 # dotenv environment variable files
 .env
-.env.development.local
-.env.test.local
-.env.production.local
 .env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
 # Next.js build output
 .next
 out
+
+# NestJS
+.nestjs/
 
 # Nuxt.js build / generate output
 .nuxt
@@ -113,6 +131,9 @@ dist
 # Docusaurus cache and generated files
 .docusaurus
 
+# Docker volumes (si se montan localmente)
+.docker/
+
 # Serverless directories
 .serverless/
 
@@ -134,3 +155,6 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# TypeORM migrations generadas
+src/migrations/

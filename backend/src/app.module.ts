@@ -6,13 +6,16 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { GqlThrottlerGuard } from 'common/guards/gql-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { BullModule } from '@nestjs/bullmq';
 import * as dotenv from 'dotenv';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 import { EnergyProduction } from './energy/energy-production/energy-production.entity';
-import { createProductionLoader } from './energy/energy-production/loaders/production.loader';
+import { EnergyConsumption } from 'energy/energy-consumption/energy-consumption.entity';
+import { createProductionBySourceLoader } from 'energy/energy-production/loaders/production-by-source.loader';
+import { createConsumptionsLoader } from 'energy/energy-consumption/loaders/consumptions.loader';
 
 import { BlockchainModule } from './infrastructure/blockchain/blockchain.module';
 import { UsersModule } from './users/users.module';
@@ -26,7 +29,7 @@ import { EnergyConsumptionModule } from 'energy/energy-consumption/energy-consum
 import { WalletModule } from 'finance/wallet/wallet.module';
 import { WalletTransactionsModule } from 'finance/wallet-transactions/wallet-transactions.module';
 import { DashboardModule } from 'application/dashboard/dashboard.module';
-
+import { AppCacheModule } from 'infrastructure/cache/cache.module';
 
 dotenv.config();
 
@@ -66,9 +69,9 @@ const isProd = process.env.NODE_ENV === 'production';
     // GRAPHQL
     GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      imports: [TypeOrmModule.forFeature([EnergyProduction])],
-      inject: [getRepositoryToken(EnergyProduction)],
-      useFactory: (pdRepo) => ({
+      imports: [TypeOrmModule.forFeature([EnergyProduction, EnergyConsumption])],
+      inject: [getRepositoryToken(EnergyProduction), getRepositoryToken(EnergyConsumption)],
+      useFactory: (pdRepo, consumptionRepo) => ({
         autoSchemaFile: true,
         // playground e introspection: solo en desarrollo en producción expone schema completo 
         playground: !isProd,
@@ -78,7 +81,8 @@ const isProd = process.env.NODE_ENV === 'production';
         context: ({ req }) => ({
           req,
           loaders: {
-            productionLoader: createProductionLoader(pdRepo),
+            productionLoader: createProductionBySourceLoader(pdRepo),
+            createConsumptionsLoader: createConsumptionsLoader(consumptionRepo)
           },
         }),
       }),
@@ -86,6 +90,23 @@ const isProd = process.env.NODE_ENV === 'production';
 
     // SCHEDULER
     ScheduleModule.forRoot(),
+
+    //CACHE (Redis con fallback a memoria)
+    AppCacheModule,
+
+    // BULLMQ — Cola de trabajos para simulaciones (requiere Redis)
+    BullModule.forRootAsync({
+      useFactory: () => ({
+        connection: {
+          host: process.env.REDIS_URL
+            ? new URL(process.env.REDIS_URL).hostname
+            : 'localhost',
+          port: process.env.REDIS_URL
+            ? parseInt(new URL(process.env.REDIS_URL).port || '6379')
+            : 6379,
+        },
+      }),
+    }),
 
     // FEATURE MODULES
     BlockchainModule,

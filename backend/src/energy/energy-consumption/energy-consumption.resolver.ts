@@ -1,17 +1,13 @@
-import {
-  Resolver,
-  Mutation,
-  Args,
-  ResolveField,
-  Parent,
-} from '@nestjs/graphql';
+import { Resolver, Mutation, Args, ResolveField, Parent } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from '../../auth/gql-auth.guard';
+
+import { EnergyConsumption } from './energy-consumption.entity';
+
+import { EnergyConsumptionGQL } from './graphql/energy-consumption.graphql';
+import { EnergyContractGQL } from 'energy/energy-contracts/graphql/energy-contract.graphql';
 
 import { EnergyConsumptionService, ConsumptionAction } from './energy-consumption.service';
-import { EnergyConsumptionGQL } from './graphql/energy-consumption.graphql';
-import { GqlAuthGuard } from '../../auth/gql-auth.guard';
-import { EnergyContractGQL } from 'energy/energy-contracts/graphql/energy-contract.graphql';
-import { EnergyConsumption } from './energy-consumption.entity';
 
 @Resolver(() => EnergyConsumptionGQL)
 export class EnergyConsumptionResolver {
@@ -19,15 +15,13 @@ export class EnergyConsumptionResolver {
     private readonly service: EnergyConsumptionService,
   ) {}
 
-  /* ================= RELATIONS ================= */
-
+  /* RELATIONS */
   @ResolveField(() => EnergyContractGQL, { nullable: true })
   async contract(@Parent() consumption: EnergyConsumption) {
     return consumption.contract;
   }
 
-  /* ================= MUTATION ================= */
-
+  /* MUTATIONS */
   @UseGuards(GqlAuthGuard)
   @Mutation(() => EnergyConsumptionGQL, { nullable: true })
   async reportConsumption(

@@ -64,42 +64,55 @@ El backend implementa el patrón **Ports and Adapters**. La lógica de negocio d
 
 ```mermaid
 graph TD
-    subgraph Aplicacion["Aplicacion"]
-        D["DashboardModule"]
-    end
+    D["DashboardModule"]
 
-    subgraph Dominio["Dominio"]
-        EC["EnergyContractModule"]
-        ECO["EnergyConsumptionModule"]
-        W["WalletModule"]
-        EP["EnergyProductionModule"]
-    end
+    D --> EC
+    D --> ECO
+    D --> EP
+    D --> W
+    D --> CA
 
-    subgraph Infraestructura["Infraestructura"]
-        PORT(["IEnergyContractBlockchain — PORT"])
-        BC["BlockchainModule"]
-        CA["AppCacheModule"]
-        CR["CryptoModule"]
-    end
+    EC["EnergyContractModule"]
+    ECO["EnergyConsumptionModule"]
+    EP["EnergyProductionModule"]
+    W["WalletModule"]
 
-    subgraph Simulacion["Simulacion"]
-        SC["SimulationScheduler"] --> BQ[["BullMQ"]] --> WK["Workers"]
-    end
+    EC --> PORT
+    ECO --> PORT
+    PORT(["IEnergyContractBlockchain — PORT"])
+    PORT -.->|implementa| BC["BlockchainModule"]
 
-    subgraph Externo["Externo"]
-        PG[("PostgreSQL")]
-        RD[("Redis")]
-        HH["Hardhat Node"]
-    end
+    W --> CR["CryptoModule"]
+    CA["AppCacheModule"]
 
-    D --> EC & ECO & EP & W & CA
-    EC & ECO --> PORT
-    PORT -.->|implementa| BC
-    W --> CR
-    WK --> ECO
+    SCH["SimulationScheduler"]
+    BQ[["BullMQ"]]
+    WK["Workers"]
+    SCH --> BQ --> WK --> ECO
+
+    PG[("PostgreSQL")]
+    RD[("Redis")]
+    HH["Hardhat Node"]
+
+    EC --> PG
+    W --> PG
     BC --> HH
-    EC & W --> PG
-    CA & BQ --> RD
+    CA --> RD
+    BQ --> RD
+
+    classDef app    fill:#1a3a5c,stroke:#3b82f6,color:#fff
+    classDef dom    fill:#1a3d2a,stroke:#10b981,color:#fff
+    classDef infra  fill:#3d2a0d,stroke:#f59e0b,color:#fff
+    classDef sim    fill:#2a1a3d,stroke:#8b5cf6,color:#fff
+    classDef ext    fill:#1f2937,stroke:#4b5563,color:#9ca3af
+    classDef port   fill:#2d1a4d,stroke:#7c3aed,color:#e9d5ff
+
+    class D app
+    class EC,ECO,EP,W dom
+    class BC,CR,CA infra
+    class SCH,BQ,WK sim
+    class PG,RD,HH ext
+    class PORT port
 ```
 
 ### Flujo: contratar energía P2P

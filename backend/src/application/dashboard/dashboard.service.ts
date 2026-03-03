@@ -18,6 +18,7 @@ import { DashboardHome } from "./graphql/dashboard-home.graphql";
 import { ContractsCount, DailyEnergy, EnergySourceDistribution, HourlyEnergy, HourlyFinancial } from "./graphql/dashboard-energy-financial.graphql";
 
 import { WalletService } from "finance/wallet/wallet.service";
+import { ContractStatus } from "energy/energy-contracts/graphql/dto/energy-contract.enums";
 
 @Injectable()
 export class DashboardService {
@@ -298,11 +299,13 @@ export class DashboardService {
     const sellerSources = await this.pdRepo
       .createQueryBuilder('pd')
       .innerJoin('pd.energySource', 'es')
-      .innerJoin('es.user', 'seller')
-      .innerJoin('seller.wallet', 'sw')
-      .innerJoin(EnergyContract, 'contract',
-        'contract.sellerWalletId = sw.id AND contract.buyerWalletId = :walletId',
-        { walletId: wallet.id }
+      .innerJoin('es.user', 'sellerUser')
+      .innerJoin('sellerUser.wallets', 'sellerWallet')
+      .innerJoin(
+        EnergyContract,
+        'contract',
+        'contract.sellerWallet = sellerWallet.id AND contract.buyerWallet = :walletId AND contract.status = :status',
+        { walletId: wallet.id, status: ContractStatus.ACTIVE }
       )
       .select('es.sourceType', 'sourceType')
       .addSelect('SUM(pd.amount)', 'production')
@@ -310,7 +313,8 @@ export class DashboardService {
       .groupBy('es.sourceType')
       .addGroupBy('es.capacityKw')
       .getRawMany();
-    const result = sellerSources.map(r => ({
+    
+      const result = sellerSources.map(r => ({
       sourceType: r.sourceType,
       productionKwh: Number(r.production),
       capacityKw: Number(r.capacity),

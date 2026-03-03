@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, Inject } from '@nestjs/common';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,6 +10,8 @@ import { EnergyProduction } from 'energy/energy-production/energy-production.ent
 import { Wallet } from 'finance/wallet/wallet.entity';
 
 import { EnergyConsumptionService } from 'energy/energy-consumption/energy-consumption.service';
+import { IEnergyContractBlockchain, ENERGY_CONTRACT_BLOCKCHAIN_PORT } from 'infrastructure/blockchain/ports/energy-contracts-blockchain.port';
+import { BlockchainSyncStatus } from 'energy/energy-consumption/graphql/dto/energy-consumption.enums';
 
 import { SIMULATION_QUEUE, SIMULATION_JOB, SimulateSourceJobData, SimulateContractJobData } from './simulation.constants';
 
@@ -32,6 +34,9 @@ export class ProductionWorker extends WorkerHost {
 
     @InjectRepository(Wallet)
     private readonly walletRepo: Repository<Wallet>,
+
+    @Inject(ENERGY_CONTRACT_BLOCKCHAIN_PORT)
+    private readonly blockchainService: IEnergyContractBlockchain,
   ) {
     super();
   }
@@ -66,6 +71,18 @@ export class ProductionWorker extends WorkerHost {
       .toString();
 
     await this.walletRepo.save(wallet);
+
+    // Mint REC — certifica la producción renovable on-chain
+    try {
+      await this.blockchainService.mintREC(wallet.address, sourceType, amount.toString());
+      await this.productionRepo.update(production.id, {
+        blockchainSyncStatus: BlockchainSyncStatus.SYNCED,
+      });
+    } catch (error) {
+      await this.productionRepo.update(production.id, {
+        blockchainSyncStatus: BlockchainSyncStatus.FAILED,
+      });
+    }
   }
 
   private calculateProduction(sourceType: string, capacityKw: number): string {

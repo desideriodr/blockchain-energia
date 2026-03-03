@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ethers, NonceManager, parseUnits } from 'ethers';
+import { Mutex } from 'async-mutex';
 import * as energyArtifact from '../../../../smart-contracts/artifacts/contracts/EnergySupplyContract.sol/EnergySupplyContract.json';
+import * as recArtifact from '../../../../smart-contracts/artifacts/contracts/EnergyREC.sol/EnergyREC.json';
 import { IEnergyContractBlockchain } from './ports/energy-contracts-blockchain.port';
 
 /* BlockchainService
@@ -12,6 +14,7 @@ import { IEnergyContractBlockchain } from './ports/energy-contracts-blockchain.p
 export class BlockchainService implements IEnergyContractBlockchain, OnModuleInit {
   private provider!: ethers.JsonRpcProvider;
   private signer!: NonceManager;
+  private readonly txMutex = new Mutex();
 
   private readonly stateEnumMap: Record<number, string> = {
     0: 'CREATED',
@@ -32,6 +35,7 @@ export class BlockchainService implements IEnergyContractBlockchain, OnModuleIni
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
     const wallet = new ethers.Wallet(privateKey, this.provider);
     this.signer = new NonceManager(wallet);
+    await this.signer.reset(); // sincroniza nonce con el nodo
 
     console.log('Blockchain connected');
     console.log('Oracle address:', await this.signer.getAddress());
@@ -49,13 +53,14 @@ export class BlockchainService implements IEnergyContractBlockchain, OnModuleIni
   }
 
   private async execute(txFactory: () => Promise<any>): Promise<string> {
-    const tx = await txFactory();
-
-    if (!tx?.wait) {
-      throw new Error("Funcion no retorna una transacción.");
-    }
-    const receipt = await tx.wait();
-    return receipt.hash;
+    return this.txMutex.runExclusive(async () => {
+      const tx = await txFactory();
+      if (!tx?.wait) {
+        throw new Error("Funcion no retorna una transacción.");
+      }
+      const receipt = await tx.wait();
+      return receipt.hash;
+    });
   }
 
   /*
@@ -145,6 +150,27 @@ export class BlockchainService implements IEnergyContractBlockchain, OnModuleIni
   ): Promise<string> {
     const contract = this.getWriteContract(contractAddress);
     return this.execute(() => contract.terminateByExpiration());
+  }
+
+  /*
+   * REC — Renewable Energy Certificate
+   */
+  private getRectWriteContract() {
+    const recAddress = process.env.ENERGY_REC_CONTRACT_ADDRESS;
+    if (!recAddress) throw new Error('ENERGY_REC_CONTRACT_ADDRESS not defined');
+    return new ethers.Contract(recAddress, recArtifact.abi, this.signer);
+  }
+
+  async mintREC(producerAddress: string, sourceType: string, kwh: string): Promise<string> {
+    const contract = this.getRectWriteContract();
+    const amount = parseUnits(kwh, 4);
+    return this.execute(() => contract.mint(producerAddress, sourceType, amount));
+  }
+
+  async burnREC(consumerAddress: string, contractAddress: string, kwh: string): Promise<string> {
+    const contract = this.getRectWriteContract();
+    const amount = parseUnits(kwh, 4);
+    return this.execute(() => contract.burn(consumerAddress, contractAddress, amount));
   }
 
   /*READ - lee el estado actual del contrato*/

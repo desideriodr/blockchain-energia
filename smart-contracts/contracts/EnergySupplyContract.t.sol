@@ -27,7 +27,8 @@ contract EnergySupplyContractTest is Test {
             oracle,
             pricePerKwh,
             start,
-            end
+            end,
+            "SOLAR"
         );
     }
 
@@ -40,6 +41,10 @@ contract EnergySupplyContractTest is Test {
             uint(contractInstance.state()),
             uint(EnergySupplyContract.ContractState.CREATED)
         );
+    }
+
+    function testSourceType() public view {
+        assertEq(contractInstance.sourceType(), "SOLAR");
     }
 
     /* ---------------------------------------------------------- */

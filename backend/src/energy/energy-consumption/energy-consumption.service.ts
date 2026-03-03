@@ -45,6 +45,7 @@ export class EnergyConsumptionService {
   ): Promise<ReportConsumptionResult> {
 
     let contractAddress: string | null = null;
+    let buyerWalletAddress: string | null = null;
     let createdConsumption: EnergyConsumption | null = null;
     const kwhToReport = kwhConsumed.toString();
 
@@ -151,6 +152,7 @@ export class EnergyConsumptionService {
       );
 
       contractAddress = contract.contractAddress;
+      buyerWalletAddress = buyerWallet.address;
 
       return {
         action: ConsumptionAction.REPORT,
@@ -171,6 +173,17 @@ export class EnergyConsumptionService {
           contractAddress,
           kwhToReport,
         );
+
+        // Burn REC — certifica el consumo de energía renovable on-chain
+        try {
+          await this.blockchainService.burnREC(
+            buyerWalletAddress!,
+            contractAddress,
+            kwhToReport,
+          );
+        } catch (error) {
+          console.warn('burnREC failed (no crítico):', error);
+        }
 
         await this.dataSource
           .getRepository(EnergyConsumption)

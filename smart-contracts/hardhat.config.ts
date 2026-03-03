@@ -25,7 +25,7 @@ export default defineConfig({
     },
   },
   paths: {
-    tests: "./test",  // ← aquí
+    tests: "./test",
   },
   networks: {
     hardhatMainnet: {

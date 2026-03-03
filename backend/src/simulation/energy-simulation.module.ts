@@ -7,6 +7,7 @@ import { EnergyProduction } from 'energy/energy-production/energy-production.ent
 import { Wallet } from 'finance/wallet/wallet.entity';
 import { EnergyContract } from 'energy/energy-contracts/energy-contracts.entity';
 import { EnergyConsumptionModule } from 'energy/energy-consumption/energy-consumption.module';
+import { BlockchainModule } from 'infrastructure/blockchain/blockchain.module';
 
 import { EnergySimulationScheduler } from './energy-simulation.scheduler';
 import { ProductionWorker, ConsumptionWorker } from './energy-simulation.worker';
@@ -36,6 +37,7 @@ import { SIMULATION_QUEUE } from './simulation.constants';
       { name: SIMULATION_QUEUE.CONSUMPTION },
     ),
     EnergyConsumptionModule,
+    BlockchainModule,
   ],
   providers: [
     EnergySimulationScheduler, // cron — activa el gateway

@@ -6,21 +6,21 @@ import hre from "hardhat";
 import { ethers } from "ethers";
 
 async function main() {
-  // 1️⃣ Conectar al proveedor local Hardhat
+  // 1. Conectar al proveedor local Hardhat
   const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
 
-  // 2️⃣ Leer artifact del contrato
+  // 2. Leer artifact del contrato
   const artifact = await hre.artifacts.readArtifact("EnergySupplyContract");
   const abi = artifact.abi;
   const iface = new ethers.Interface(abi);
 
-  // 3️⃣ Obtener todos los logs desde el bloque 0
+  // 3. Obtener todos los logs desde el bloque 0
   const logsRaw = await provider.getLogs({
     fromBlock: 0,
     toBlock: "latest",
   });
 
-  // 4️⃣ Detectar automáticamente todas las direcciones de contratos desplegados
+  // 4. Detectar automáticamente todas las direcciones de contratos desplegados
   const contractAddresses = new Set<string>();
 
   for (const log of logsRaw) {
@@ -36,7 +36,7 @@ async function main() {
 
   console.log("Contratos detectados:", [...contractAddresses]);
 
-  // 5️⃣ Mapeo legible de estados (según enum Solidity)
+  // 5. Mapeo legible de estados (según enum Solidity)
   const stateEnumMap: Record<number, string> = {
     0: "CREATED",
     1: "ACTIVE",
@@ -46,7 +46,7 @@ async function main() {
     5: "COMPLETED",
   };
 
-  // 6️⃣ Mapear eventos → estado
+  // 6. Mapear eventos → estado
   const stateEventMap: Record<string, string> = {
     ContractActivated: "ACTIVE",
     ContractSuspended: "SUSPENDED",
@@ -56,7 +56,7 @@ async function main() {
     ContractTerminated: "TERMINATED",
   };
 
-  // 7️⃣ Recorremos cada contrato
+  // 7. Recorremos cada contrato
   for (const address of contractAddresses) {
     const contract = new ethers.Contract(address, abi, provider);
 

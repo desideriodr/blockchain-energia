@@ -22,6 +22,8 @@ contract EnergySupplyContract {
     uint256 public immutable startTimestamp;
     uint256 public immutable endTimestamp;
 
+    string public sourceType; // tipo de fuente: SOLAR, EOLICA, HIDRO, BIOMASA
+
     ContractState public state;
 
     string public terminationReason;
@@ -66,9 +68,11 @@ contract EnergySupplyContract {
         address _oracle,
         uint256 _pricePerKwhCop,
         uint256 _startTimestamp,
-        uint256 _endTimestamp
+        uint256 _endTimestamp,
+        string memory _sourceType
     ) {
         require(_endTimestamp > _startTimestamp, "Invalid time range");
+        require(bytes(_sourceType).length > 0, "Source type required");
 
         buyer = _buyer;
         seller = _seller;
@@ -77,6 +81,7 @@ contract EnergySupplyContract {
         pricePerKwhCop = _pricePerKwhCop;
         startTimestamp = _startTimestamp;
         endTimestamp = _endTimestamp;
+        sourceType = _sourceType;
 
         state = ContractState.CREATED;
     }

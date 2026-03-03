@@ -64,6 +64,18 @@ export interface IEnergyContractBlockchain {
     terminateByExpiration(contractAddress: string): Promise<string>;
 
     /*
+     * Emite RECs al productor cuando genera energía renovable.
+     * Retorna el hash de la transacción.
+     */
+    mintREC(producerAddress: string, sourceType: string, kwh: string): Promise<string>;
+
+    /*
+     * Quema RECs del consumidor cuando consume energía certificada.
+     * Retorna el hash de la transacción.
+     */
+    burnREC(consumerAddress: string, contractAddress: string, kwh: string): Promise<string>;
+
+    /*
      * Lee el estado actual de un contrato desde la blockchain.
      */
     getContractState(contractAddress: string): Promise<{

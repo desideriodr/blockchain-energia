@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
 import { EnergySource } from 'energy/energy-source/energy-source.entity';
+import { BlockchainSyncStatus } from 'energy/energy-production/graphql/dto/energy-production.enums';
 
 
 @Entity('energy_production')
@@ -15,6 +16,13 @@ export class EnergyProduction {
 
   @Column({ nullable: true })
   assetId: number; // opcional, referencia a equipment/asset
+
+  @Column({
+    type: 'enum',
+    enum: BlockchainSyncStatus,
+    default: BlockchainSyncStatus.PENDING,
+  })
+  blockchainSyncStatus: BlockchainSyncStatus;
 
   @CreateDateColumn({ type: 'timestamp with time zone' })
   createdAt: Date;

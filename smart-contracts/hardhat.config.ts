@@ -19,6 +19,14 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    mocha: {
+      timeout: 60000,
+    },
+  },
+  paths: {
+    tests: "./test",  // ← aquí
+  },
   networks: {
     hardhatMainnet: {
       type: "edr-simulated",

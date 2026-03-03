@@ -11,7 +11,7 @@
     "outDir": "dist",
     "types": [
       "node",
-      "hardhat"
+      "hardhat",
     ]
   },
   "include": [

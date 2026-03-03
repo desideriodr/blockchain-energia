@@ -82,7 +82,7 @@ const isProd = process.env.NODE_ENV === 'production';
           req,
           loaders: {
             productionLoader: createProductionBySourceLoader(pdRepo),
-            createConsumptionsLoader: createConsumptionsLoader(consumptionRepo)
+            consumptionsLoader: createConsumptionsLoader(consumptionRepo)
           },
         }),
       }),

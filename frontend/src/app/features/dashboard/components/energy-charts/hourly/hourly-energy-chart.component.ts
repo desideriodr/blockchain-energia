@@ -109,7 +109,7 @@ export class HourlyEnergyChartComponent implements OnChanges {
       },
       {
         name: 'Consumo',
-        data: this.hourlyEnergy.map(h => -h.consumptionKwh),
+        data: this.hourlyEnergy.map(h => h.consumptionKwh),
       },
     ];
 

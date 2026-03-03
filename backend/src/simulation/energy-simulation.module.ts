@@ -10,6 +10,8 @@ import { EnergyConsumptionModule } from 'energy/energy-consumption/energy-consum
 
 import { EnergySimulationScheduler } from './energy-simulation.scheduler';
 import { ProductionWorker, ConsumptionWorker } from './energy-simulation.worker';
+import { IoTGatewayService } from './iot-gateway.service';
+import { IoTSubscriberService } from './iot-subscriber.service';
 import { SIMULATION_QUEUE } from './simulation.constants';
 
 /**
@@ -18,28 +20,29 @@ import { SIMULATION_QUEUE } from './simulation.constants';
  * Registra dos colas separadas:
  *  - simulation:production → jobs de producción de energía por fuente
  *  - simulation:consumption → jobs de consumo por contrato
+ *  Fujo completo:
+ *    IoTGateway → Redis Pub/Sub → IoTSubscriber → BullMQ → Worker → DB + Blockchain
  */
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       EnergySource,
       EnergyProduction,
-      Wallet,
       EnergyContract,
+      Wallet,
     ]),
-
-    // Registrar colas BullMQ
     BullModule.registerQueue(
       { name: SIMULATION_QUEUE.PRODUCTION },
       { name: SIMULATION_QUEUE.CONSUMPTION },
     ),
-
     EnergyConsumptionModule,
   ],
   providers: [
-    EnergySimulationScheduler, // dispara jobs — cron producer
-    ProductionWorker,           // procesa jobs de producción
-    ConsumptionWorker,          // procesa jobs de consumo
+    EnergySimulationScheduler, // cron — activa el gateway
+    IoTGatewayService,         // publica en Redis Pub/Sub
+    IoTSubscriberService,      // suscribe y encola en BullMQ
+    ProductionWorker,          // procesa jobs de producción
+    ConsumptionWorker,         // procesa jobs de consumo
   ],
 })
 export class EnergySimulationModule {}

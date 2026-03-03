@@ -109,7 +109,7 @@ export class MonthlyEnergyChartComponent implements OnChanges {
       },
       {
         name: 'Consumo',
-        data: this.monthlyEnergy.map(d => -d.consumptionKwh),
+        data: this.monthlyEnergy.map(d => d.consumptionKwh),
       },
     ];
 

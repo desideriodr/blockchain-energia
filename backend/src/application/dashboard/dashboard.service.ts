@@ -185,9 +185,13 @@ export class DashboardService {
 
     const consumption = await this.consumptionRepo
       .createQueryBuilder('ec')
+      .innerJoin('ec.contract', 'contract')
+      .innerJoin('contract.buyerWallet', 'bw')
+      .innerJoin('bw.user', 'u')
       .select(`TO_CHAR(DATE_TRUNC('hour', ec."recordedAt"), 'HH24:00')`, 'hour')
       .addSelect('SUM(ec."energyKwhConsumed")', 'consumption')
-      .where(`DATE(ec."recordedAt") = CURRENT_DATE`)
+      .where('u.id = :userId', { userId })
+      .andWhere(`DATE(ec."recordedAt") = CURRENT_DATE`)
       .groupBy(`DATE_TRUNC('hour', ec."recordedAt")`)
       .getRawMany();
 
@@ -195,7 +199,6 @@ export class DashboardService {
     const consMap = new Map(consumption.map(c => [c.hour, Number(c.consumption)]));
 
     const result: HourlyEnergy[] = [];
-
     for (let i = 0; i < 24; i++) {
       const label = `${i.toString().padStart(2, '0')}:00`;
       result.push({
@@ -227,8 +230,12 @@ export class DashboardService {
 
     const consumption = await this.consumptionRepo
       .createQueryBuilder('ec')
+      .innerJoin('ec.contract', 'contract')
+      .innerJoin('contract.buyerWallet', 'bw')
+      .innerJoin('bw.user', 'u')
       .select(`TO_CHAR(ec."recordedAt", 'YYYY-MM-DD')`, 'day')
       .addSelect('SUM(ec."energyKwhConsumed")', 'consumption')
+      .where('u.id = :userId', { userId })
       .andWhere(`DATE_TRUNC('month', ec."recordedAt") = DATE_TRUNC('month', CURRENT_DATE)`)
       .groupBy('day')
       .getRawMany();
@@ -237,20 +244,14 @@ export class DashboardService {
     const consMap = new Map(consumption.map(c => [c.day, Number(c.consumption)]));
 
     const now = new Date();
-    const daysInMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0
-    ).getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const result: DailyEnergy[] = [];
-
     const year = now.getFullYear();
     const month = now.getMonth();
 
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i);
       const label = date.toISOString().slice(0, 10);
-
       result.push({
         day: label,
         productionKwh: prodMap.get(label) || 0,
@@ -268,7 +269,8 @@ export class DashboardService {
     const cached = await this.cache.get<EnergySourceDistribution[]>(key);
     if (cached) return cached;
 
-    const raw = await this.pdRepo
+    // Primero intentar fuentes propias (rol vendedor)
+    const ownSources = await this.pdRepo
       .createQueryBuilder('pd')
       .innerJoin('pd.energySource', 'es')
       .select('es.sourceType', 'sourceType')
@@ -279,7 +281,36 @@ export class DashboardService {
       .addGroupBy('es.capacityKw')
       .getRawMany();
 
-    const result = raw.map(r => ({
+    // Si tiene fuentes propias, mostrarlas
+    if (ownSources.length > 0) {
+      const result = ownSources.map(r => ({
+        sourceType: r.sourceType,
+        productionKwh: Number(r.production),
+        capacityKw: Number(r.capacity),
+      }));
+      await this.cache.set(key, result, CACHE_TTL.SOURCE_DISTRIBUTION);
+      return result;
+    }
+
+    // Si no tiene fuentes (es comprador), mostrar fuentes de sus vendedores
+    const wallet = await this.walletService.getWalletByUser(userId);
+
+    const sellerSources = await this.pdRepo
+      .createQueryBuilder('pd')
+      .innerJoin('pd.energySource', 'es')
+      .innerJoin('es.user', 'seller')
+      .innerJoin('seller.wallet', 'sw')
+      .innerJoin(EnergyContract, 'contract',
+        'contract.sellerWalletId = sw.id AND contract.buyerWalletId = :walletId',
+        { walletId: wallet.id }
+      )
+      .select('es.sourceType', 'sourceType')
+      .addSelect('SUM(pd.amount)', 'production')
+      .addSelect('es.capacityKw', 'capacity')
+      .groupBy('es.sourceType')
+      .addGroupBy('es.capacityKw')
+      .getRawMany();
+    const result = sellerSources.map(r => ({
       sourceType: r.sourceType,
       productionKwh: Number(r.production),
       capacityKw: Number(r.capacity),

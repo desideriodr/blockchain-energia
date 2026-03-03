@@ -1,9 +1,12 @@
-import { InputType, Field, Int } from '@nestjs/graphql';
+import { InputType, Field, Float } from '@nestjs/graphql';
+import { IsNumber, IsPositive } from 'class-validator';
 
 @InputType()
 export class CreateEnergyOfferInput {
 
-  @Field()
+  @Field(() => Float)
+  @IsNumber()
+  @IsPositive()
   pricePerKwhCop: number;
 
 }

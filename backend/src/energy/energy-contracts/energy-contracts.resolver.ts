@@ -21,7 +21,7 @@ export class EnergyContractResolver {
   @UseGuards(GqlAuthGuard)
   @ResolveField(() => [EnergyConsumptionGQL])
   async consumptions(@Parent() contract: EnergyContractGQL, @Context() ctx) {
-    return ctx.loaders.consumtionsLoader.load(contract.id);
+    return ctx.loaders.consumptionsLoader.load(contract.id);
   }
 
   /* Contratar una oferta energética P2P */

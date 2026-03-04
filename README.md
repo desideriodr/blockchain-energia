@@ -1,6 +1,6 @@
 # ⚡ Blockchain Energía
 
-> Plataforma P2P de comercio de energía renovable construida sobre Ethereum. Permite a prosumidores vender el excedente de su producción energética directamente a consumidores mediante contratos inteligentes, sin intermediarios.
+> Plataforma P2P de comercio de energía renovable construida sobre Ethereum. Permite a prosumidores vender el excedente de su producción energética directamente a consumidores mediante contratos inteligentes, sin intermediarios. Cada kWh producido se certifica on-chain como un Certificado de Energía Renovable (REC) mediante un token ERC-20, y se quema al ser consumido, garantizando trazabilidad completa de la fuente energética.
 
 <div align="center">
 
@@ -19,6 +19,9 @@
 ## Tabla de contenidos
 
 - [Arquitectura](#arquitectura)
+- [Contratos inteligentes](#contratos-inteligentes)
+- [Flujo IoT simulado](#flujo-iot-simulado)
+- [Tokenización REC](#tokenización-rec)
 - [Tecnologías](#tecnologías)
 - [Requisitos](#requisitos)
 - [Instalación y puesta en marcha](#instalación-y-puesta-en-marcha)
@@ -35,95 +38,127 @@
 ### Vista general del sistema
 
 ```mermaid
-graph TB
-    U(["Usuario Final"])
+graph LR
+    U(["Usuario"])
 
-    subgraph SIS["Sistema Blockchain Energia"]
-        FE["Angular Frontend — Puerto 4200"]
-        BE["NestJS Backend — Puerto 3000"]
-        SC["Smart Contract — Solidity EnergySupply"]
+    subgraph SIS["Aplicacion"]
+        direction TB
+        FE["Angular\nPuerto 4200"]
+        BE["NestJS\nPuerto 3000"]
     end
 
-    subgraph INF["Infraestructura Docker"]
-        PG[("PostgreSQL — Puerto 5432")]
-        RD[("Redis — Cache y BullMQ")]
-        HH["Hardhat Node — Puerto 8545"]
+    subgraph IOT["Capa IoT"]
+        direction TB
+        SCH["Scheduler\nCron 5min"]
+        GW["IoT Gateway\nPublisher"]
+        SUB["IoT Subscriber"]
+    end
+
+    subgraph BC["Blockchain"]
+        direction TB
+        HH["Hardhat\nPuerto 8545"]
+        SC["EnergySupply\nContract"]
+        REC["EnergyREC\nERC-20"]
+    end
+
+    subgraph INF["Infraestructura"]
+        direction TB
+        PG[("PostgreSQL\n5432")]
+        RD[("Redis\nPub/Sub + BullMQ")]
     end
 
     U -->|HTTPS| FE
-    FE -->|GraphQL over HTTP| BE
-    BE -->|TypeORM| PG
-    BE -->|cache-manager y BullMQ| RD
-    BE -->|ethers.js RPC| HH
-    HH -->|deploy y call| SC
+    FE -->|GraphQL| BE
+    BE --- INF
+    BE --- BC
+    SCH --> GW --> RD --> SUB --> RD
+    RD -->|workers| BE
+    HH --> SC
+    HH --> REC
 
-    style U  fill:#1a2235,stroke:#00d4ff,color:#fff
-    style FE fill:#1a3d2a,stroke:#10b981,color:#fff
-    style BE fill:#1a2d4a,stroke:#3b82f6,color:#fff
-    style SC fill:#2d1a4d,stroke:#7c3aed,color:#fff
-    style PG fill:#2d1a4d,stroke:#9c27b0,color:#fff
-    style RD fill:#3d1a1a,stroke:#ef4444,color:#fff
-    style HH fill:#3d2a0d,stroke:#f59e0b,color:#fff
+    style U   fill:#0f172a,stroke:#38bdf8,color:#e2e8f0
+    style FE  fill:#14532d,stroke:#4ade80,color:#e2e8f0
+    style BE  fill:#1e3a5f,stroke:#60a5fa,color:#e2e8f0
+    style SCH fill:#1e1b4b,stroke:#818cf8,color:#e2e8f0
+    style GW  fill:#1e1b4b,stroke:#818cf8,color:#e2e8f0
+    style SUB fill:#1e1b4b,stroke:#818cf8,color:#e2e8f0
+    style HH  fill:#431407,stroke:#fb923c,color:#e2e8f0
+    style SC  fill:#2e1065,stroke:#c084fc,color:#e2e8f0
+    style REC fill:#2e1065,stroke:#e879f9,color:#e2e8f0
+    style PG  fill:#1e1b4b,stroke:#a78bfa,color:#e2e8f0
+    style RD  fill:#450a0a,stroke:#f87171,color:#e2e8f0
 ```
 
 ### Arquitectura hexagonal del backend
 
-El backend implementa el patrón **Ports and Adapters**. La lógica de negocio depende de interfaces (puertos), no de implementaciones concretas. La blockchain puede reemplazarse sin modificar los servicios de dominio.
+El backend implementa **Ports and Adapters**. La lógica de negocio depende de la interfaz `IEnergyContractBlockchain` (puerto), no de `BlockchainService` directamente. La blockchain puede reemplazarse sin modificar los servicios de dominio.
 
 ```mermaid
-graph TD
-    D["DashboardModule"]
+graph LR
+    subgraph SIM["Simulacion IoT"]
+        direction TB
+        SCH["Scheduler"]
+        GW["IoT Gateway"]
+        SUB["IoT Subscriber"]
+        BQ[["BullMQ"]]
+        WK["Workers"]
+        SCH --> GW --> SUB --> BQ --> WK
+    end
 
-    D --> EC
-    D --> ECO
-    D --> EP
-    D --> W
-    D --> CA
+    subgraph DOM["Dominio"]
+        direction TB
+        D["Dashboard"]
+        EC["EnergyContract"]
+        ECO["EnergyConsumption"]
+        EP["EnergyProduction"]
+        W["Wallet"]
+    end
 
-    EC["EnergyContractModule"]
-    ECO["EnergyConsumptionModule"]
-    EP["EnergyProductionModule"]
-    W["WalletModule"]
+    subgraph PORT_LAYER["Puerto"]
+        PORT(["IEnergyContractBlockchain"])
+    end
 
+    subgraph INFRA["Infraestructura"]
+        direction TB
+        BC["BlockchainModule"]
+        CR["CryptoModule"]
+        CA["CacheModule"]
+    end
+
+    subgraph EXT["Externos"]
+        direction TB
+        PG[("PostgreSQL")]
+        RD[("Redis")]
+        HH["Hardhat Node"]
+    end
+
+    WK --> ECO
+    WK --> PORT
     EC --> PORT
     ECO --> PORT
-    PORT(["IEnergyContractBlockchain — PORT"])
-    PORT -.->|implementa| BC["BlockchainModule"]
-
-    W --> CR["CryptoModule"]
-    CA["AppCacheModule"]
-
-    SCH["SimulationScheduler"]
-    BQ[["BullMQ"]]
-    WK["Workers"]
-    SCH --> BQ --> WK --> ECO
-
-    PG[("PostgreSQL")]
-    RD[("Redis")]
-    HH["Hardhat Node"]
-
+    PORT -.->|implementa| BC
     EC --> PG
+    ECO --> PG
     W --> PG
+    W --> CR
     BC --> HH
     CA --> RD
     BQ --> RD
 
-    classDef app   fill:#1a3a5c,stroke:#3b82f6,color:#fff
-    classDef dom   fill:#1a3d2a,stroke:#10b981,color:#fff
-    classDef infra fill:#3d2a0d,stroke:#f59e0b,color:#fff
-    classDef sim   fill:#2a1a3d,stroke:#8b5cf6,color:#fff
-    classDef ext   fill:#1f2937,stroke:#4b5563,color:#9ca3af
-    classDef port  fill:#2d1a4d,stroke:#7c3aed,color:#e9d5ff
+    classDef sim   fill:#1e1b4b,stroke:#818cf8,color:#e2e8f0
+    classDef dom   fill:#14532d,stroke:#4ade80,color:#e2e8f0
+    classDef port  fill:#2e1065,stroke:#c084fc,color:#e2e8f0
+    classDef infra fill:#431407,stroke:#fb923c,color:#e2e8f0
+    classDef ext   fill:#1e293b,stroke:#475569,color:#94a3b8
 
-    class D app
-    class EC,ECO,EP,W dom
-    class BC,CR,CA infra
-    class SCH,BQ,WK sim
-    class PG,RD,HH ext
+    class SCH,GW,SUB,BQ,WK sim
+    class D,EC,ECO,EP,W dom
     class PORT port
+    class BC,CR,CA infra
+    class PG,RD,HH ext
 ```
 
-### Flujo: contratar energía P2P
+### Flujo completo: contratar energía P2P
 
 ```mermaid
 sequenceDiagram
@@ -136,7 +171,7 @@ sequenceDiagram
     Comprador->>BE: mutation contractOffer(offerId)
 
     rect rgb(20, 40, 80)
-        Note over BE,DB: Transaccion DB ACID
+        Note over BE,DB: Transacción DB ACID
         BE->>DB: findOne EnergyOffer con LOCK
         BE->>DB: findOne buyerWallet y sellerWallet
         BE->>DB: save EnergyContract PENDING_BLOCKCHAIN
@@ -144,16 +179,114 @@ sequenceDiagram
 
     rect rgb(40, 20, 80)
         Note over BE,BC: Registro en Blockchain
-        BE->>PORT: deployEnergyContract(buyer, seller, price, dates)
-        PORT->>BC: ethers.js RPC deploy EnergySupply
+        BE->>PORT: deployEnergyContract(buyer, seller, price, dates, sourceType)
+        PORT->>BC: ethers.js deploy EnergySupplyContract
         BC-->>PORT: contractAddress
         BE->>PORT: activateContract(contractAddress)
         BC-->>BE: confirmed
     end
 
-    BE->>DB: update contract ACTIVE
+    BE->>DB: update contract ACTIVE + sourceType
     BE-->>Comprador: contractAddress y status ACTIVE
 ```
+
+---
+
+## Contratos inteligentes
+
+El sistema utiliza dos contratos Solidity desplegados en un nodo Hardhat local.
+
+### EnergySupplyContract.sol
+
+Gestiona el ciclo de vida completo de un contrato de suministro P2P entre un productor y un consumidor.
+
+**Estado del contrato:**
+
+| Estado | Descripción |
+|---|---|
+| `CREATED` | Desplegado, pendiente de activación |
+| `ACTIVE` | En operación, acepta reportes de consumo |
+| `SUSPENDED` | Pausado por fondos insuficientes o falta de producción |
+| `CANCELED` | Cancelado voluntariamente por una de las partes |
+| `TERMINATED` | Terminado por vencimiento del plazo |
+| `COMPLETED` | Finalizado exitosamente |
+
+**Variables on-chain:** `buyer`, `seller`, `oracle`, `sourceType`, `pricePerKwhCop`, `startTimestamp`, `endTimestamp`, `state`, `consumedKwh`.
+
+### EnergyREC.sol — ERC-20
+
+Token de Certificado de Energía Renovable. Cada unidad representa 1/10.000 kWh producido. La escala de 10.000 permite registrar fracciones de kWh con precisión de 4 decimales en enteros Solidity.
+
+| Operación | Cuándo ocurre | Actor |
+|---|---|---|
+| `mintREC(producer, sourceType, kwhAmount)` | Al registrar una producción SYNCED | Productor |
+| `burnREC(seller, contractAddress, kwhAmount)` | Al reportar un consumo certificado | Vendedor (entrega RECs) |
+
+El `sourceType` queda registrado on-chain en cada mint, permitiendo auditar qué proporción del total proviene de solar, eólica, hídrica o biomasa.
+
+---
+
+## Flujo IoT simulado
+
+Los medidores inteligentes se simulan con `IoTGatewayService`, que publica lecturas cada 5 minutos usando **Redis Pub/Sub** con estructura de topics compatible con MQTT.
+
+```
+Topic producción:  iot/meter/{sourceId}/reading
+Topic consumo:     iot/meter/{contractId}/demand
+Topic red:         iot/network/status
+```
+
+**Protocolo del mensaje (producción):**
+```json
+{
+  "deviceId": "uuid-de-la-fuente",
+  "userId": "uuid-del-productor",
+  "sourceType": "SOLAR",
+  "capacityKw": 10.5,
+  "timestamp": "2026-03-04T00:00:00.000Z",
+  "protocol": "MQTT_SIM"
+}
+```
+
+**Pipeline completo:**
+
+```
+Cron (5min)
+  → IoTGatewayService.publishProductionReadings()
+    → Redis PUBLISH iot/meter/{id}/reading
+      → IoTSubscriberService (psubscribe)
+        → BullMQ productionQueue.add(job)
+          → ProductionWorker.process(job)
+            → INSERT energy_production
+            → UPDATE wallet.energyStored
+            → blockchainService.mintREC()  ← on-chain
+```
+
+En un sistema real, el `IoTGatewayService` recibiría los datos de un broker MQTT (Mosquitto, HiveMQ) o de dispositivos LoRaWAN, sin cambios en el resto del pipeline.
+
+---
+
+## Tokenización REC
+
+El ciclo completo de certificación de energía renovable es:
+
+```
+Producción IoT
+  → mintREC(producerAddress, "SOLAR", kwhAmount)
+    → EnergyREC.balanceOf(producer) += kwhAmount * 10000
+
+Contratación
+  → EnergySupplyContract.deploy(..., sourceType="SOLAR")
+    → sourceType queda inmutable on-chain
+
+Consumo reportado
+  → EnergySupplyContract.reportConsumption(kwhAmount)
+  → burnREC(sellerAddress, contractAddress, kwhAmount)
+    → EnergyREC.balanceOf(seller) -= kwhAmount * 10000
+    → evento RECBurned(consumer, contractAddress, kwhAmount, timestamp)
+```
+
+Esto garantiza que cada kWh consumido bajo un contrato activo tiene un REC correspondiente que acredita su origen renovable, auditable on-chain en cualquier momento.
 
 ---
 
@@ -165,13 +298,15 @@ sequenceDiagram
 | Backend | NestJS | 10 |
 | API | GraphQL — Apollo | 4 |
 | ORM | TypeORM | 0.3 |
-| Smart Contracts | Solidity y Hardhat | 0.8 / 3 |
+| Smart Contracts | Solidity / Hardhat | 0.8 / 3 |
 | Base de datos | PostgreSQL | 16 |
-| Caché y Colas | Redis y BullMQ | 7 |
+| Caché y Colas | Redis / BullMQ | 7 |
+| IoT simulado | Redis Pub/Sub (MQTT-compatible) | 7 |
+| Tokenización | ERC-20 (EnergyREC) | — |
 | Cifrado | AES-256-GCM — Node crypto | — |
 | Blockchain client | ethers.js | 6 |
 | Contenedores | Docker Compose | v5 |
-| Tests | Jest y @nestjs/testing | 30 |
+| Tests | Jest / @nestjs/testing | 30 |
 
 ---
 
@@ -198,7 +333,7 @@ cd blockchain-energia
 docker compose up -d
 ```
 
-Esto levanta PostgreSQL (puerto 5432) y Redis (puerto 6379). Verifica que estén `healthy`:
+Levanta PostgreSQL (5432) y Redis (6379). Verifica que estén `healthy`:
 
 ```bash
 docker compose ps
@@ -210,7 +345,7 @@ docker compose ps
 cp backend/.env.example backend/.env
 ```
 
-Edita `backend/.env` con tus valores (ver sección [Variables de entorno](#variables-de-entorno)).
+Edita `backend/.env` con tus valores (ver [Variables de entorno](#variables-de-entorno)).
 
 ### 4. Instalar dependencias e iniciar el backend
 
@@ -220,9 +355,9 @@ npm install
 npm run start:dev
 ```
 
-El servidor GraphQL estará disponible en `http://localhost:3000/graphql`.
+El servidor GraphQL estará en `http://localhost:3000/graphql`.
 
-### 5. Iniciar el nodo Hardhat (blockchain local)
+### 5. Iniciar el nodo Hardhat
 
 En una terminal separada:
 
@@ -232,11 +367,20 @@ npm install
 npx hardhat node
 ```
 
-El nodo RPC estará disponible en `http://localhost:8545`.
+El nodo RPC estará en `http://localhost:8545`.
 
-### 6. Instalar dependencias e iniciar el frontend
+### 6. Desplegar los contratos
 
-En otra terminal:
+En otra terminal, con el nodo Hardhat corriendo:
+
+```bash
+cd smart-contracts
+npx hardhat run scripts/deployEnergyREC.ts --network hardhatMainnet
+```
+
+Copia la dirección impresa y agrégala a `backend/.env` como `ENERGY_REC_CONTRACT_ADDRESS`.
+
+### 7. Instalar dependencias e iniciar el frontend
 
 ```bash
 cd frontend
@@ -244,13 +388,13 @@ npm install
 ng serve
 ```
 
-La aplicación estará disponible en `http://localhost:4200`.
+La aplicación estará en `http://localhost:4200`.
 
 ---
 
 ## Variables de entorno
 
-Crea el archivo `backend/.env` a partir de `backend/.env.example`:
+Crea `backend/.env` a partir de `backend/.env.example`:
 
 ```env
 # Base de datos
@@ -264,7 +408,7 @@ DB_SYNC=true
 # Redis
 REDIS_URL=redis://localhost:6379
 
-# JWT — minimo 32 caracteres
+# JWT — mínimo 32 caracteres
 JWT_SECRET=cambia_esto_por_un_secreto_seguro_minimo_32_chars
 
 # Cifrado de wallets — exactamente 32 caracteres
@@ -273,6 +417,9 @@ WALLET_ENCRYPTION_KEY=cambia_esto_exactamente_32_chars!
 # Blockchain
 BLOCKCHAIN_RPC=http://localhost:8545
 PLATFORM_PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+# Contrato ERC-20 REC — se obtiene al ejecutar deployEnergyREC.ts
+ENERGY_REC_CONTRACT_ADDRESS=0x...
 
 # App
 NODE_ENV=development
@@ -290,7 +437,7 @@ FRONTEND_URL=http://localhost:4200
 
 ```bash
 npm run start:dev     # Desarrollo con hot-reload
-npm run start:prod    # Produccion — requiere build previo
+npm run start:prod    # Producción — requiere build previo
 npm run build         # Compilar TypeScript
 npm test              # Tests unitarios
 npm run test:cov      # Tests con reporte de cobertura
@@ -308,10 +455,23 @@ docker compose ps           # Estado de los servicios
 ### Smart Contracts
 
 ```bash
-npx hardhat node                                              # Nodo local
-npx hardhat compile                                           # Compilar contratos
-npx hardhat test                                              # Tests de contratos
-npx hardhat run scripts/deploy.ts --network localhost         # Desplegar
+# Nodo local
+npx hardhat node
+
+# Compilar contratos
+npx hardhat compile
+
+# Tests de contratos
+npx hardhat test
+
+# Desplegar EnergyREC (ERC-20) — ejecutar una sola vez
+npx hardhat run scripts/deployEnergyREC.ts --network hardhatMainnet
+
+# Inspeccionar el estado de contratos de suministro on-chain
+npx hardhat run scripts/replayEnergySupply.ts --network hardhatMainnet
+
+# Inspeccionar mints y burns de RECs on-chain
+npx hardhat run scripts/replayEnergyREC.ts --network hardhatMainnet
 ```
 
 ---
@@ -320,23 +480,31 @@ npx hardhat run scripts/deploy.ts --network localhost         # Desplegar
 
 ### Arquitectura hexagonal — Ports and Adapters
 
-`EnergyContractService` y `EnergyConsumptionService` dependen de la interfaz `IEnergyContractBlockchain` (puerto), no de `BlockchainService` directamente. Esto permite mockear la blockchain en tests sin nodo real y reemplazar el proveedor blockchain sin tocar la lógica de negocio.
+`EnergyContractService` y `EnergyConsumptionService` dependen de `IEnergyContractBlockchain` (puerto), no de `BlockchainService` directamente. Permite mockear la blockchain en tests y reemplazar el proveedor sin tocar la lógica de dominio.
 
-### Cache-Aside con Redis
+### IoT Gateway con Redis Pub/Sub
 
-`DashboardService` aplica cache-aside en 6 métodos de agregación con TTLs según volatilidad del dato: 5 minutos para KPIs en tiempo real, 15 minutos para históricos mensuales. Fallback automático a memoria si Redis no está disponible.
-
-### DataLoader — prevención de N+1
-
-Los resolvers GraphQL de contratos y producción usan DataLoader para batching. N contratos con consumptions pasa de N queries individuales a una sola query `WHERE contractId IN (...)`.
+`IoTGatewayService` actúa como publisher MQTT-compatible sobre Redis Pub/Sub. `IoTSubscriberService` suscribe con `psubscribe` usando wildcards (`iot/meter/*/reading`). Replica el patrón de un gateway IoT real conectado a Mosquitto o HiveMQ, sin dependencia de un broker externo en el entorno de desarrollo.
 
 ### Producer/Consumer con BullMQ
 
-`SimulationScheduler` solo encola jobs con `addBulk()` y retorna inmediatamente. `ProductionWorker` y `ConsumptionWorker` procesan los jobs en paralelo fuera del hilo principal, sin bloquear la API.
+`SimulationScheduler` solo encola jobs y retorna inmediatamente. `ProductionWorker` y `ConsumptionWorker` procesan en paralelo fuera del hilo principal sin bloquear la API GraphQL.
+
+### Cache-Aside con Redis
+
+`DashboardService` aplica cache-aside en métodos de agregación con TTLs según volatilidad del dato: 5 minutos para KPIs en tiempo real, 15 minutos para históricos mensuales. Fallback automático a memoria si Redis no está disponible.
+
+### DataLoader — prevención de N+1
+
+Los resolvers GraphQL usan DataLoader para batching. N contratos con consumptions pasa de N queries individuales a una sola query `WHERE contractId IN (...)`.
 
 ### Cifrado AES-256-GCM
 
-Las claves privadas de wallets Ethereum se cifran antes de persistir en base de datos. Formato almacenado: `iv:authTag:encryptedData`. El `authTag` de GCM detecta cualquier manipulación del ciphertext.
+Las claves privadas de wallets Ethereum se cifran antes de persistir en base de datos. Formato: `iv:authTag:encryptedData`. El `authTag` GCM detecta cualquier manipulación del ciphertext.
+
+### Resiliencia de Nonce blockchain
+
+`BlockchainService` detecta errores de nonce desincronizado (`Nonce too high / too low`), ejecuta `signer.reset()` para resincronizar con el nodo y reintenta la transacción automáticamente. Esencial en entornos de desarrollo donde Hardhat puede reiniciarse sin reiniciar el backend.
 
 ---
 
@@ -346,15 +514,24 @@ Las claves privadas de wallets Ethereum se cifran antes de persistir en base de 
 blockchain-energia/
 ├── backend/
 │   └── src/
-│       ├── application/        # Dashboard y KPIs
+│       ├── application/        # Dashboard, KPIs y analytics
 │       ├── auth/               # JWT y guards
-│       ├── energy/             # Dominio — contratos, consumo, ofertas, produccion, fuentes
+│       ├── energy/             # Dominio — contratos, consumo, ofertas, producción, fuentes
 │       ├── finance/            # Dominio — wallets y transacciones
-│       ├── infrastructure/     # Adaptadores — blockchain, Redis, crypto
-│       ├── simulation/         # BullMQ scheduler y workers
+│       ├── infrastructure/     # Adaptadores — blockchain (ethers.js), Redis, crypto
+│       ├── simulation/         # IoT Gateway, Subscriber, Scheduler y Workers BullMQ
 │       └── users/
-├── frontend/                   # SPA Angular
-├── smart-contracts/            # Contratos Solidity y scripts Hardhat
+├── frontend/                   # SPA Angular — standalone components
+├── smart-contracts/
+│   ├── contracts/
+│   │   ├── EnergySupplyContract.sol   # Contrato de suministro P2P
+│   │   ├── EnergyREC.sol              # Token ERC-20 de certificación REC
+│   │   ├── EnergySupplyContract.t.sol # Tests Solidity
+│   │   └── EnergyREC.t.sol            # Tests Solidity
+│   └── scripts/
+│       ├── deployEnergyREC.ts         # Deploy inicial del contrato REC
+│       ├── replayEnergySupply.ts      # Inspección de contratos on-chain
+│       └── replayEnergyREC.ts         # Inspección de mints y burns REC
 └── docker-compose.yml
 ```
 

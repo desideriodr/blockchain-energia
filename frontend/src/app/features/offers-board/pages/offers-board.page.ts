@@ -37,11 +37,11 @@ export class OffersBoardPage implements OnInit {
 
   // Labels legibles para los tipos de fuente
   readonly sourceLabels: Record<string, string> = {
-    SOLAR: '☀️ Solar',
-    EOLICA: '💨 Eólica',
-    HIDRO: '💧 Hidro',
-    BIOMASA: '🌿 Biomasa',
-    OTRO: '⚡ Otro',
+    SOLAR: 'Solar',
+    EOLICA: 'Eólica',
+    HIDRO: 'Hidro',
+    BIOMASA: 'Biomasa',
+    OTRO: 'Otro',
   };
 
   constructor(private service: OffersBoardService) {}

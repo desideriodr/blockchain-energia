@@ -22,6 +22,9 @@ export class EnergyContractGQL {
   @Field()
   pricePerKwhCop: string;
 
+  @Field()
+  sourceType: string;
+
   @Field(() => ContractStatus)
   status: ContractStatus;
 

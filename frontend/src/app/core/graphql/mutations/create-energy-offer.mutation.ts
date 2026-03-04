@@ -6,6 +6,10 @@ export const CREATE_ENERGY_OFFER = gql`
       id
       pricePerKwhCop
       status
+      energySource {
+        id
+        sourceType
+      }
     }
   }
 `;

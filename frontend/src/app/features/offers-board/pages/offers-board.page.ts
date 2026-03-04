@@ -1,13 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, BehaviorSubject, switchMap } from 'rxjs';
+import { Observable, BehaviorSubject, switchMap, tap } from 'rxjs';
 
 import { OffersBoardService } from '../../../core/graphql/services/offers-board.service';
-import { EnergyOffer } from '../../../core/graphql/models/energy-offer.model';
+import { EnergyOffer, ProductionSummaryBySource } from '../../../core/graphql/models/energy-offer.model';
 import { CreateEnergyOfferInput } from '../../../core/graphql/inputs/create-energy-offer.input';
 import { ContractEnergyInput } from '../../../core/graphql/inputs/contract-energy.input';
-
 
 @Component({
   selector: 'app-offers-board',
@@ -17,36 +16,78 @@ import { ContractEnergyInput } from '../../../core/graphql/inputs/contract-energ
   styleUrls: ['./offers-board.page.scss'],
 })
 export class OffersBoardPage implements OnInit {
+
+  // ── Tabla 1: producciones del usuario agrupadas por fuente ──
+  productions$!: Observable<ProductionSummaryBySource[]>;
+  isProducer = false;
+
+  // Fuente seleccionada para publicar oferta
+  selectedSource: ProductionSummaryBySource | null = null;
+  pricePerKwhCop: number = 0;
+
+  // ── Tabla 2: ofertas abiertas del mercado ──
   offers$!: Observable<EnergyOffer[]>;
   page = 1;
   perPage = 10;
 
-  pricePerKwhCop: number = 0;
-  loading: boolean = false;
+  loading = false;
 
-  private refresh$ = new BehaviorSubject<void>(undefined);
+  private refreshOffers$ = new BehaviorSubject<void>(undefined);
+  private refreshProductions$ = new BehaviorSubject<void>(undefined);
+
+  // Labels legibles para los tipos de fuente
+  readonly sourceLabels: Record<string, string> = {
+    SOLAR: '☀️ Solar',
+    EOLICA: '💨 Eólica',
+    HIDRO: '💧 Hidro',
+    BIOMASA: '🌿 Biomasa',
+    OTRO: '⚡ Otro',
+  };
 
   constructor(private service: OffersBoardService) {}
 
   ngOnInit() {
-    // Lista de ofertas con refresh
-    this.offers$ = this.refresh$.pipe(
-      switchMap(() => this.service.getOpenOffers())
+    this.offers$ = this.refreshOffers$.pipe(
+      switchMap(() => this.service.getOpenOffers()),
+    );
+
+    this.productions$ = this.refreshProductions$.pipe(
+      switchMap(() => this.service.getMyProductionsBySource()),
+      tap(productions => {
+        // El usuario es productor si tiene al menos una fuente con kWh disponibles
+        this.isProducer = productions.some(p => p.availableKwh > 0);
+      }),
     );
   }
 
+  selectSource(source: ProductionSummaryBySource) {
+    this.selectedSource = source;
+    this.pricePerKwhCop = 0;
+  }
+
+  clearSelection() {
+    this.selectedSource = null;
+    this.pricePerKwhCop = 0;
+  }
+
+  sourceLabel(type: string): string {
+    return this.sourceLabels[type] ?? type;
+  }
+
   createOffer() {
+    if (!this.selectedSource || this.pricePerKwhCop <= 0) return;
 
     this.loading = true;
     const input: CreateEnergyOfferInput = {
       pricePerKwhCop: this.pricePerKwhCop,
+      energySourceId: this.selectedSource.sourceId,
     };
 
     this.service.createOffer(input).subscribe({
       next: () => {
-        alert('Oferta creada exitosamente');
-        this.pricePerKwhCop = 0;
-        this.refresh$.next(); // refrescar lista
+        this.clearSelection();
+        this.refreshOffers$.next();
+        this.refreshProductions$.next();
       },
       error: (err) => {
         console.error(err);
@@ -64,8 +105,7 @@ export class OffersBoardPage implements OnInit {
 
     this.service.contractOffer(input).subscribe({
       next: () => {
-        alert('Oferta contratada correctamente');
-        this.refresh$.next(); // refrescar lista
+        this.refreshOffers$.next();
       },
       error: (err) => {
         console.error(err);
@@ -77,13 +117,13 @@ export class OffersBoardPage implements OnInit {
 
   nextPage() {
     this.page++;
-    this.refresh$.next();
+    this.refreshOffers$.next();
   }
 
   prevPage() {
     if (this.page > 1) {
       this.page--;
-      this.refresh$.next();
+      this.refreshOffers$.next();
     }
   }
 }

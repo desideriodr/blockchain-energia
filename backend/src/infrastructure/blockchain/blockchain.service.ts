@@ -54,12 +54,28 @@ export class BlockchainService implements IEnergyContractBlockchain, OnModuleIni
 
   private async execute(txFactory: () => Promise<any>): Promise<string> {
     return this.txMutex.runExclusive(async () => {
-      const tx = await txFactory();
-      if (!tx?.wait) {
-        throw new Error("Funcion no retorna una transacción.");
+      try {
+        const tx = await txFactory();
+        if (!tx?.wait) {
+          throw new Error("Funcion no retorna una transacción.");
+        }
+        const receipt = await tx.wait();
+        return receipt.hash;
+      } catch (error: any) {
+        // Nonce desincronizado — resetear y reintentar una vez
+        const msg = error?.error?.message ?? error?.message ?? '';
+        if (msg.includes('Nonce too high') || msg.includes('nonce too low') || msg.includes('nonce')) {
+          console.warn('[Blockchain] Nonce desincronizado, reseteando y reintentando...');
+          await this.signer.reset();
+          const tx = await txFactory();
+          if (!tx?.wait) {
+            throw new Error("Funcion no retorna una transacción.");
+          }
+          const receipt = await tx.wait();
+          return receipt.hash;
+        }
+        throw error;
       }
-      const receipt = await tx.wait();
-      return receipt.hash;
     });
   }
 
@@ -72,6 +88,7 @@ export class BlockchainService implements IEnergyContractBlockchain, OnModuleIni
     pricePerKwhCop: string,
     startTimestamp: number,
     endTimestamp: number,
+    sourceType: string,
   ): Promise<string> {
     const factory = new ethers.ContractFactory(
       energyArtifact.abi,
@@ -79,17 +96,31 @@ export class BlockchainService implements IEnergyContractBlockchain, OnModuleIni
       this.signer,
     );
 
-    const contract = await factory.deploy(
-      buyer,
-      seller,
-      await this.signer.getAddress(),
-      BigInt(pricePerKwhCop),
-      BigInt(startTimestamp),
-      BigInt(endTimestamp),
-    );
+    const deploy = async () => {
+      const c = await factory.deploy(
+        buyer,
+        seller,
+        await this.signer.getAddress(),
+        BigInt(pricePerKwhCop),
+        BigInt(startTimestamp),
+        BigInt(endTimestamp),
+        sourceType,
+      );
+      await c.waitForDeployment();
+      return c.getAddress();
+    };
 
-    await contract.waitForDeployment();
-    return await contract.getAddress();
+    try {
+      return await deploy();
+    } catch (error: any) {
+      const msg = error?.error?.message ?? error?.message ?? '';
+      if (msg.includes('Nonce too high') || msg.includes('nonce too low') || msg.includes('nonce')) {
+        console.warn('[Blockchain] Nonce desincronizado en deploy, reseteando y reintentando...');
+        await this.signer.reset();
+        return await deploy();
+      }
+      throw error;
+    }
   }
 
   /*

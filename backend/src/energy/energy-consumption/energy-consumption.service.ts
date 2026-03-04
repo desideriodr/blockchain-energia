@@ -174,13 +174,23 @@ export class EnergyConsumptionService {
           kwhToReport,
         );
 
-        // Burn REC — certifica el consumo de energía renovable on-chain
+        // Burn REC — el productor (seller) entrega los RECs al certificar el consumo
+        // Es el vendedor quien tiene los RECs acumulados por su producción
         try {
-          await this.blockchainService.burnREC(
-            buyerWalletAddress!,
-            contractAddress,
-            kwhToReport,
-          );
+          const contractWithWallets = await this.dataSource
+            .getRepository(EnergyContract)
+            .findOne({
+              where: { contractAddress },
+              relations: ['sellerWallet'],
+            });
+
+          if (contractWithWallets?.sellerWallet?.address) {
+            await this.blockchainService.burnREC(
+              contractWithWallets.sellerWallet.address,
+              contractAddress,
+              kwhToReport,
+            );
+          }
         } catch (error) {
           console.warn('burnREC failed (no crítico):', error);
         }
@@ -227,35 +237,47 @@ export class EnergyConsumptionService {
     return result;
   }
 
-  @Cron(' */30 * * * *')
+  @Cron('*/30 * * * *')
   async retryFailedSyncs(): Promise<void> {
 
     const repo = this.dataSource.getRepository(EnergyConsumption);
 
     const failed = await repo.find({
       where: { blockchainSyncStatus: BlockchainSyncStatus.FAILED },
-      relations: ['contract'],
+      relations: ['contract', 'contract.sellerWallet'],
     });
 
     for (const consumption of failed) {
       try {
+        const { contractAddress } = consumption.contract;
+        const { energyKwhConsumed } = consumption;
 
+        // 1. Reportar consumo en el contrato
         await this.blockchainService.reportConsumption(
-          consumption.contract.contractAddress,
-          consumption.energyKwhConsumed,
+          contractAddress,
+          energyKwhConsumed,
         );
+
+        // 2. Quemar RECs del vendedor (igual que en el flujo normal)
+        const sellerAddress = consumption.contract.sellerWallet?.address;
+        if (sellerAddress) {
+          try {
+            await this.blockchainService.burnREC(
+              sellerAddress,
+              contractAddress,
+              energyKwhConsumed,
+            );
+          } catch (burnError) {
+            console.warn(`burnREC retry failed for consumption ${consumption.id}:`, burnError);
+          }
+        }
 
         consumption.blockchainSyncStatus = BlockchainSyncStatus.SYNCED;
         await repo.save(consumption);
 
       } catch (error) {
-
-        console.error(
-          `Retry failed for consumption ${consumption.id}`,
-          error,
-        );
-
-        // Se mantiene en FAILED
+        console.error(`Retry failed for consumption ${consumption.id}:`, error);
+        // Se mantiene en FAILED hasta el siguiente ciclo
       }
     }
   }

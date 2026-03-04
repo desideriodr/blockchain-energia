@@ -14,11 +14,13 @@ export class ProductionService {
     return this.apollo
       .watchQuery<{ productionDashboard?: ProductionDashboard }>({
         query: PRODUCTION_DASHBOARD_QUERY,
+        fetchPolicy: 'network-only',
+        nextFetchPolicy: 'network-only',
+        pollInterval: 10000,
       })
       .valueChanges.pipe(
         map(r => r.data?.productionDashboard),
-        filter((d): d is ProductionDashboard => d !== undefined
-        )
+        filter((d): d is ProductionDashboard => d !== undefined),
       );
   }
 }

@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Wallet } from '../../finance/wallet/wallet.entity';
+import { EnergySource } from '../energy-source/energy-source.entity';
 
 export enum EnergyOfferStatus {
     OPEN = 'OPEN',
@@ -27,8 +28,16 @@ export class EnergyOffer {
     @Column()
     sellerAddress: string;
 
-    //ORM
+    // ORM — wallet del vendedor
     @ManyToOne(() => Wallet, { nullable: false })
     @JoinColumn({ name: 'sellerAddress', referencedColumnName: 'address' })
     sellerWallet: Wallet;
+
+    // ORM — fuente de energía que respalda la oferta
+    @Column()
+    energySourceId: string;
+
+    @ManyToOne(() => EnergySource, { nullable: false, eager: false })
+    @JoinColumn({ name: 'energySourceId' })
+    energySource: EnergySource;
 }

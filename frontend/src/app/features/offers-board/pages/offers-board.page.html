@@ -4,80 +4,150 @@
 </header>
 
 <!-- =============================
-     Formulario para crear la oferta
+     TABLA 1: Mis producciones por fuente
+     Solo visible si el usuario produce energía
 ============================= -->
 
-<section class="card create-offer">
-  <h3 class="section-title">Publicar oferta</h3>
+<ng-container *ngIf="productions$ | async as productions">
+  <section class="card" *ngIf="productions.length > 0">
+    <h3 class="section-title">Mi energía disponible</h3>
+    <p class="section-hint">Selecciona una fuente para publicarla como oferta en el mercado.</p>
 
-  <div class="form-row">
+    <table class="offers-table">
+      <thead>
+        <tr>
+          <th>Fuente</th>
+          <th>Capacidad</th>
+          <th>kWh disponibles</th>
+          <th>Registros</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let prod of productions"
+            [class.selected-row]="selectedSource?.sourceId === prod.sourceId">
+          <td>
+            <span class="source-badge" [class]="'source-' + prod.sourceType.toLowerCase()">
+              {{ sourceLabel(prod.sourceType) }}
+            </span>
+          </td>
+          <td>{{ prod.capacityKw | number:'1.0-2' }} kW</td>
+          <td>
+            <strong>{{ prod.availableKwh | number:'1.0-2' }}</strong> kWh
+          </td>
+          <td>{{ prod.productionCount }}</td>
+          <td>
+            <button
+              class="btn-outline-primary"
+              (click)="selectSource(prod)"
+              [disabled]="prod.availableKwh <= 0 || loading"
+              [class.active]="selectedSource?.sourceId === prod.sourceId">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M11 17h2v-6h-2zm1-8q.425 0 .713-.288T13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137t2.137 3.175T22 12t-.788 3.9t-2.137 3.175t-3.175 2.137T12 22"/>
+              </svg>
+              {{ selectedSource?.sourceId === prod.sourceId ? 'Seleccionada' : 'Publicar' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
-    <div class="form-group">
-      <label>Precio por kWh (Cop)</label>
-      <input type="number" [(ngModel)]="pricePerKwhCop" />
+    <!-- Panel de publicación: aparece al seleccionar una fila -->
+    <div class="publish-panel" *ngIf="selectedSource">
+      <div class="publish-panel__info">
+        <span class="source-badge" [class]="'source-' + selectedSource.sourceType.toLowerCase()">
+          {{ sourceLabel(selectedSource.sourceType) }}
+        </span>
+        <span class="publish-panel__kwh">{{ selectedSource.availableKwh | number:'1.0-2' }} kWh disponibles</span>
+      </div>
+
+      <div class="publish-panel__form">
+        <div class="form-group">
+          <label>Precio por kWh (COP)</label>
+          <input type="number" [(ngModel)]="pricePerKwhCop" min="1" placeholder="Ej: 500" />
+        </div>
+
+        <button class="btn-primary" (click)="createOffer()" [disabled]="loading || pricePerKwhCop <= 0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h9v2H5v14h14v-9h2v9q0 .825-.587 1.413T19 21zm3-4v-2h8v2zm0-3v-2h8v2zm0-3V9h8v2zm9-2V7h-2V5h2V3h2v2h2v2h-2v2z"/>
+          </svg>
+          Publicar oferta
+        </button>
+
+        <button class="btn-ghost" (click)="clearSelection()" [disabled]="loading">
+          Cancelar
+        </button>
+      </div>
     </div>
 
-    <button class="btn-primary" (click)="createOffer()" [disabled]="loading">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-        <path fill="currentColor"
-          d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h9v2H5v14h14v-9h2v9q0 .825-.587 1.413T19 21zm3-4v-2h8v2zm0-3v-2h8v2zm0-3V9h8v2zm9-2V7h-2V5h2V3h2v2h2v2h-2v2z" />
-      </svg> Publicar
-    </button>
-
-  </div>
-</section>
+  </section>
+</ng-container>
 
 <!-- =============================
-     Tabla con el listado de ofertas disponibles
+     TABLA 2: Ofertas del mercado
+     Visible para todos los usuarios
 ============================= -->
 
-<section class="card offers">
+<section class="card">
   <h3 class="section-title">Ofertas disponibles</h3>
 
-  <table class="offers-table">
-    <thead>
-      <tr>
-        <th>Vendedor</th>
-        <th>Precio / kWh (Cop)</th>
-        <th>Estado</th>
-        <th>Fecha creación</th>
-        <th>Acción</th>
-      </tr>
-    </thead>
+  <ng-container *ngIf="offers$ | async as offers; else loadingOffers">
+    <div *ngIf="offers.length === 0" class="empty-state">
+      No hay ofertas disponibles en este momento.
+    </div>
 
-    <tbody>
-      <tr *ngFor="let offer of offers$ | async">
-        <td>
-          {{ offer.seller.nombres }}
-          {{ offer.seller.apellidos }}
-        </td>
-        <td>{{ offer.pricePerKwhCop }}</td>
-        <td>{{ offer.createdAt }}</td>
-        <td>
-          <span class="status" [class.open]="offer.status === 'OPEN'" [class.closed]="offer.status !== 'OPEN'">
-            {{ offer.status }}
-          </span>
-        </td>
-        <td class="contract-cell">
-          <button class="btn-secondary" (click)="contract(offer)" [disabled]="loading || offer.status !== 'OPEN'">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
-                <path
-                  d="M18 6c-.047-1.553-.22-2.48-.862-3.121C16.258 2 14.842 2 12.01 2H8.007c-2.832 0-4.248 0-5.127.879C2 3.757 2 5.172 2 8v8c0 2.828 0 4.243.88 5.121S5.175 22 8.007 22h4.004c2.831 0 4.247 0 5.127-.879c.642-.641.815-1.567.862-3.121" />
-                <path
-                  d="m20.242 11.742l1.177-1.177c.27-.27.406-.406.478-.552a1 1 0 0 0 0-.88c-.072-.146-.208-.282-.478-.552s-.406-.406-.552-.478a1 1 0 0 0-.88 0c-.146.072-.281.208-.552.478l-1.177 1.177m1.984 1.984l-5.266 5.266L12 18l.992-2.976l5.266-5.266m1.984 1.984l-1.984-1.984M5 19h1l1.25-2.5L8.5 19h1M6 6h8m-8 4h6" />
-              </g>
-            </svg> Contratar
-          </button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <table class="offers-table" *ngIf="offers.length > 0">
+      <thead>
+        <tr>
+          <th>Vendedor</th>
+          <th>Fuente</th>
+          <th>Precio / kWh (COP)</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let offer of offers">
+          <td>{{ offer.seller.nombres }} {{ offer.seller.apellidos }}</td>
+          <td>
+            <span class="source-badge" [class]="'source-' + offer.energySource.sourceType.toLowerCase()">
+              {{ sourceLabel(offer.energySource.sourceType) }}
+            </span>
+          </td>
+          <td><strong>{{ offer.pricePerKwhCop | number:'1.0-0' }}</strong></td>
+          <td>
+            <span class="status" [class.open]="offer.status === 'OPEN'" [class.closed]="offer.status !== 'OPEN'">
+              {{ offer.status === 'OPEN' ? 'Disponible' : offer.status }}
+            </span>
+          </td>
+          <td>{{ offer.createdAt | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <button
+              class="btn-secondary"
+              (click)="contract(offer)"
+              [disabled]="loading || offer.status !== 'OPEN'">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+                  <path d="M18 6c-.047-1.553-.22-2.48-.862-3.121C16.258 2 14.842 2 12.01 2H8.007c-2.832 0-4.248 0-5.127.879C2 3.757 2 5.172 2 8v8c0 2.828 0 4.243.88 5.121S5.175 22 8.007 22h4.004c2.831 0 4.247 0 5.127-.879c.642-.641.815-1.567.862-3.121"/>
+                  <path d="m20.242 11.742l1.177-1.177c.27-.27.406-.406.478-.552a1 1 0 0 0 0-.88c-.072-.146-.208-.282-.478-.552s-.406-.406-.552-.478a1 1 0 0 0-.88 0c-.146.072-.281.208-.552.478l-1.177 1.177m1.984 1.984l-5.266 5.266L12 18l.992-2.976l5.266-5.266m1.984 1.984l-1.984-1.984M5 19h1l1.25-2.5L8.5 19h1M6 6h8m-8 4h6"/>
+                </g>
+              </svg>
+              Contratar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
-  <div class="pagination">
-    <button class="btn-ghost" (click)="prevPage()">Anterior</button>
-    <span>Página {{ page }}</span>
-    <button class="btn-ghost" (click)="nextPage()">Siguiente</button>
-  </div>
+    <div class="pagination" *ngIf="offers.length > 0">
+      <button class="btn-ghost" (click)="prevPage()" [disabled]="page === 1">Anterior</button>
+      <span class="page-info">Página {{ page }}</span>
+      <button class="btn-ghost" (click)="nextPage()">Siguiente</button>
+    </div>
+  </ng-container>
 
+  <ng-template #loadingOffers>
+    <div class="table-loading">Cargando ofertas...</div>
+  </ng-template>
 </section>

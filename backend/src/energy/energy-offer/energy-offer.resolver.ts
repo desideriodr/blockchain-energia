@@ -4,6 +4,7 @@ import { GqlAuthGuard } from 'auth/gql-auth.guard';
 
 import { EnergyOfferService } from './energy-offer.service';
 import { EnergyOfferGQL } from './graphql/energy-offer.graphql';
+import { ProductionSummaryBySourceGQL } from './graphql/production-summary.graphql';
 import { CreateEnergyOfferInput } from './graphql/inputs/create-energy-offer.input';
 import { UserGQL } from '../../users/graphql/user.type';
 import { EnergyOffer } from './energy-offer.entity';
@@ -36,6 +37,8 @@ export class EnergyOfferResolver {
         };
     }
 
+    // ── Queries ──────────────────────────────────────────────
+
     @Query(() => [EnergyOfferGQL])
     async openEnergyOffers() {
         return this.service.getOpenOffers();
@@ -46,6 +49,17 @@ export class EnergyOfferResolver {
         return this.service.getMyOffers(ctx.req.user.id);
     }
 
+    /**
+     * Producciones del usuario agrupadas por fuente (Tabla 1 del BoardOffers).
+     * Solo visible para usuarios que producen energía.
+     */
+    @Query(() => [ProductionSummaryBySourceGQL])
+    async myProductionsBySource(@Context() ctx: GqlContext) {
+        return this.service.getMyProductionsBySource(ctx.req.user.id);
+    }
+
+    // ── Mutations ────────────────────────────────────────────
+
     @Mutation(() => EnergyOfferGQL)
     createEnergyOffer(
         @Args('input') input: CreateEnergyOfferInput,
@@ -54,6 +68,7 @@ export class EnergyOfferResolver {
         return this.service.createOffer(
             ctx.req.user.id,
             input.pricePerKwhCop.toString(),
+            input.energySourceId,
         );
     }
 

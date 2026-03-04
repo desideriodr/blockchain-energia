@@ -24,6 +24,9 @@ export class EnergyContract {
     @Column({ unique: true, nullable: true })
     contractAddress: string;
 
+    @Column({ length: 20 })
+    sourceType: string; // SOLAR, EOLICA, HIDRO, BIOMASA, OTRO
+
     @Column('decimal', { precision: 18, scale: 0 })
     pricePerKwhCop: string;
 

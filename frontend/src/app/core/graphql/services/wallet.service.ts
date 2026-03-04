@@ -16,16 +16,18 @@ export class WalletService {
     getMyWallet(): Observable<Wallet> {
         this.walletQueryRef = this.apollo.watchQuery<{ myWallet: Wallet }>({
             query: MY_WALLET_QUERY,
-            fetchPolicy: 'network-only'
+            fetchPolicy: 'network-only',
+            nextFetchPolicy: 'network-only',
+            pollInterval: 10000,
         });
 
         return this.walletQueryRef.valueChanges.pipe(
             map(res => res.data?.myWallet),
-            filter((wallet): wallet is Wallet => wallet !== undefined)
+            filter((wallet): wallet is Wallet => wallet !== undefined),
         );
     }
 
     refetchWallet() {
-        return this.walletQueryRef.refetch();
+        return this.walletQueryRef?.refetch();
     }
 }

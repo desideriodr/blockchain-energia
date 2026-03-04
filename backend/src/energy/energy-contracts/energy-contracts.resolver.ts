@@ -72,6 +72,7 @@ export class EnergyContractResolver {
       contractAddress: contract.contractAddress ?? null,
 
       pricePerKwhCop: contract.pricePerKwhCop,
+      sourceType: contract.sourceType,
 
       status: contract.status,
 
@@ -115,6 +116,7 @@ export class EnergyContractResolver {
       contractAddress: contract.contractAddress ?? null,
 
       pricePerKwhCop: contract.pricePerKwhCop,
+      sourceType: contract.sourceType,
 
       status: contract.status,
 

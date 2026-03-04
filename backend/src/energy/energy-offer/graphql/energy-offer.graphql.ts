@@ -1,7 +1,7 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { UserGQL } from 'users/graphql/user.type';
 import { EnergyOfferStatus } from './dto/energy-offer.enums';
-
+import { EnergySourceGQL } from 'energy/energy-source/graphql/energy-source.graphql';
 
 @ObjectType()
 export class EnergyOfferGQL {
@@ -22,4 +22,7 @@ export class EnergyOfferGQL {
 
   @Field(() => UserGQL)
   seller: UserGQL;
+
+  @Field(() => EnergySourceGQL)
+  energySource: EnergySourceGQL;
 }

@@ -19,6 +19,7 @@ export interface IEnergyContractBlockchain {
         pricePerKwhCop: string,
         startTimestamp: number,
         endTimestamp: number,
+        sourceType: string,
     ): Promise<string>;
 
     /*

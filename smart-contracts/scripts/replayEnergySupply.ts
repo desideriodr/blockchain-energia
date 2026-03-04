@@ -67,6 +67,7 @@ async function main() {
       buyer: await contract.buyer(),
       seller: await contract.seller(),
       oracle: await contract.oracle(),
+      sourceType: await contract.sourceType(),
       pricePerKwhCop: (await contract.pricePerKwhCop()).toString(),
       startTimestamp: (await contract.startTimestamp()).toString(),
       endTimestamp: (await contract.endTimestamp()).toString(),

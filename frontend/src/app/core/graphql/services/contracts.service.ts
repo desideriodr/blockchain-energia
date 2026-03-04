@@ -4,58 +4,51 @@ import { filter, map, Observable } from 'rxjs';
 
 import { GET_CONTRACTS } from '../queries/get-contracts.query';
 import { GET_CONTRACT_BY_ID } from '../queries/get-contract-by-id.query';
-
-import { EnergyContract } from '../models/energy-contract.model';
-
 import { CANCEL_CONTRACT_MUTATION } from '../mutations/cancel-contract.mutation';
+import { EnergyContract } from '../models/energy-contract.model';
 
 @Injectable({ providedIn: 'root' })
 export class ContractsService {
   constructor(private apollo: Apollo) { }
 
-  /** Obtener los contratos del usuario y mapear buyer/seller desde los wallets */
   getContracts(): Observable<EnergyContract[]> {
     return this.apollo
       .watchQuery<{ getEnergyContracts: EnergyContract[] }>({
         query: GET_CONTRACTS,
-        pollInterval: 5000,
+        fetchPolicy: 'network-only',
+        nextFetchPolicy: 'network-only',
+        pollInterval: 10000,
       })
       .valueChanges.pipe(
-        map(res => res.data?.getEnergyContracts ?? []),
-        map(contracts => contracts.filter((c): c is EnergyContract => c !== undefined)))
+        map(res => (res.data?.getEnergyContracts ?? []) as EnergyContract[]),
+      );
   }
 
-  /** Obtener un contrato por ID y mapear buyer/seller */
   getContractById(contractId: string): Observable<EnergyContract> {
-
     return this.apollo
       .watchQuery<any>({
         query: GET_CONTRACT_BY_ID,
         variables: { contractId },
         fetchPolicy: 'network-only',
+        nextFetchPolicy: 'network-only',
+        pollInterval: 10000,
       })
       .valueChanges.pipe(
-
         filter(res => !res.loading),
-
         map(res => {
-
           if (!res.data?.energyContract) {
             throw new Error('energyContract missing in response');
           }
-
           return res.data.energyContract;
         })
       );
   }
 
-  /* Cancelacion voluntaria de contrato */
   cancelContract(contractId: string) {
     return this.apollo.mutate({
       mutation: CANCEL_CONTRACT_MUTATION,
-      variables: {
-        contractId,
-      },
+      variables: { contractId },
+      refetchQueries: ['GetEnergyContracts', 'GetOpenOffers', 'MyWallet', 'DashboardEnergyFinancial'],
     });
   }
 }

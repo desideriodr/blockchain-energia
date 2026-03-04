@@ -254,3 +254,99 @@ button:disabled {
   color: #6b7280;
   font-size: 0.9rem;
 }
+
+/* =============================
+   SECTION HINT
+============================= */
+
+.section-hint {
+  font-size: 0.82rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  margin-top: -0.5rem;
+}
+
+/* =============================
+   SOURCE BADGE
+============================= */
+
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.source-solar   { background: #fef9c3; color: #854d0e; }
+  &.source-eolica  { background: #dbeafe; color: #1e40af; }
+  &.source-hidro   { background: #cffafe; color: #155e75; }
+  &.source-biomasa { background: #dcfce7; color: #166534; }
+  &.source-otro    { background: #f3f4f6; color: #374151; }
+}
+
+/* =============================
+   SELECTED ROW
+============================= */
+
+.selected-row {
+  background-color: #f0fdf4 !important;
+  outline: 1px solid #bbf7d0;
+  outline-offset: -1px;
+}
+
+/* =============================
+   PUBLISH PANEL
+============================= */
+
+.publish-panel {
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  background: #f0fdf4;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: #374151;
+  }
+
+  &__kwh {
+    font-weight: 500;
+    color: #065f46;
+  }
+
+  &__form {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+}
+
+/* =============================
+   BTN OUTLINE PRIMARY
+============================= */
+
+.btn-outline-primary {
+  background: transparent;
+  color: #0f766e;
+  border: 1px solid #0f766e;
+
+  &:hover:not(:disabled) {
+    background: #f0fdf4;
+  }
+
+  &.active {
+    background: #0f766e;
+    color: white;
+  }
+}

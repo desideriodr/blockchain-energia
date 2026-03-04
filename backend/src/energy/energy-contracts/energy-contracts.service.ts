@@ -121,13 +121,24 @@ export class EnergyContractService {
     // TRANSACCIÓN DB - las transacciones se registran primero en db y se confirma para asegurar integridad entre db y blockchain
     // ===============================
     const contract = await this.dataSource.transaction(async manager => {
+      // Paso 1: bloquear la oferta (sin relaciones para evitar LEFT JOIN + FOR UPDATE)
       const offer = await manager.findOne(EnergyOffer, {
         where: { id: offerId },
-        lock: { mode: 'pessimistic_write' }, // bloquea la oferta
+        lock: { mode: 'pessimistic_write' },
       });
 
       if (!offer || offer.status !== EnergyOfferStatus.OPEN) {
         throw new BadRequestException('Oferta no disponible');
+      }
+
+      // Paso 2: cargar energySource por separado (ya sin lock)
+      const offerWithSource = await manager.findOne(EnergyOffer, {
+        where: { id: offerId },
+        relations: ['energySource'],
+      });
+
+      if (!offerWithSource?.energySource) {
+        throw new BadRequestException('La oferta no tiene fuente de energía asociada');
       }
 
       const sellerWallet = await manager.findOneOrFail(Wallet, {
@@ -153,12 +164,15 @@ export class EnergyContractService {
       const endDate = new Date(startDate);
       endDate.setFullYear(endDate.getFullYear() + 1);
 
+      const sourceType = offerWithSource.energySource.sourceType;
+
       if (contract) {
         // Reactivar contrato existente si estaba inactivo o fallido
         contract.isActive = true;
         contract.status = ContractStatus.PENDING_BLOCKCHAIN;
         contract.startDate = startDate;
         contract.endDate = endDate;
+        contract.sourceType = sourceType;
 
         // Guardar inmediatamente antes de blockchain
         await manager.save(contract);
@@ -169,6 +183,7 @@ export class EnergyContractService {
           sellerWallet,
           buyerWallet,
           pricePerKwhCop: offer.pricePerKwhCop,
+          sourceType,
           startDate,
           endDate,
           status: ContractStatus.PENDING_BLOCKCHAIN,
@@ -190,6 +205,7 @@ export class EnergyContractService {
         contract.pricePerKwhCop,
         Math.floor(contract.startDate.getTime() / 1000),
         Math.floor(contract.endDate.getTime() / 1000),
+        contract.sourceType,
       );
 
       await this.blockchainService.activateContract(deployedAddress);

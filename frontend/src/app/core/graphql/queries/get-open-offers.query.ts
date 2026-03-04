@@ -12,6 +12,11 @@ export const GET_OPEN_OFFERS = gql`
         nombres
         apellidos
       }
+      energySource {
+        id
+        sourceType
+        capacityKw
+      }
     }
   }
 `;

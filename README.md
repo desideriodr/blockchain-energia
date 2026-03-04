@@ -546,10 +546,11 @@ npm run test:cov      # Con cobertura
 ```
 
 ```
-Test Suites : 3 passed
-Tests       : 36 passed
+Test Suites : 4 passed
+Tests       : 53 passed
 
-CryptoService          100% — constructor, encrypt, decrypt, seguridad
-WalletService          100% — crear wallet, cifrado, wallet del sistema
-EnergyContractService   48% — cancelContract, findById, acceso blockchain
+CryptoService            100% — constructor, encrypt, decrypt, seguridad
+WalletService            100% — crear wallet, cifrado, wallet del sistema
+EnergyContractService    100% — contractOffer, cancelContract, findContractById
+EnergyConsumptionService 100% — reportConsumption, suspensiones, terminación, fallo blockchain
 ```

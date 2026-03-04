@@ -69,7 +69,7 @@ describe('EnergyContractService', () => {
       providers: [
         EnergyContractService,
         { provide: DataSource,                         useValue: dataSource },
-        { provide: ENERGY_CONTRACT_BLOCKCHAIN_PORT,    useValue: { deployEnergyContract: jest.fn(), activateContract: jest.fn(), cancelContract: jest.fn() } },
+        { provide: ENERGY_CONTRACT_BLOCKCHAIN_PORT,    useValue: { deployEnergyContract: jest.fn(), activateContract: jest.fn(), cancelContract: jest.fn(), suspendContract: jest.fn() } },
         { provide: FinanceHelperService,               useValue: {} },
         { provide: getRepositoryToken(EnergyContract), useValue: contractRepo },
         { provide: getRepositoryToken(EnergyConsumption), useValue: consumptionRepo },
@@ -80,7 +80,121 @@ describe('EnergyContractService', () => {
     blockchainService = module.get(ENERGY_CONTRACT_BLOCKCHAIN_PORT);
   });
 
+  beforeAll(() => jest.spyOn(console, 'error').mockImplementation(() => {}));
+  afterAll(() => (console.error as jest.Mock).mockRestore());
   afterEach(() => jest.clearAllMocks());
+
+  // ─── contractOffer ────────────────────────────────────────────────────────
+
+  describe('contractOffer', () => {
+    const offer = {
+      id: 'offer-id',
+      status: 'OPEN',
+      sellerAddress: '0xSELLER',
+      pricePerKwhCop: '500',
+    };
+
+    const offerWithSource = {
+      ...offer,
+      energySource: { id: 'source-id', sourceType: 'SOLAR' },
+    };
+
+    const sellerWallet = { id: 'seller-wallet-id', address: '0xSELLER' };
+    const buyerWallet  = { id: 'buyer-wallet-id',  address: '0xBUYER', user: buyerUser };
+
+    const savedContract = {
+      id: 'new-contract-id',
+      offerId: 'offer-id',
+      pricePerKwhCop: '500',
+      sourceType: 'SOLAR',
+      status: 'PENDING_BLOCKCHAIN',
+      isActive: true,
+      startDate: new Date(),
+      endDate: new Date(),
+      buyerWallet:  { ...buyerWallet,  user: buyerUser  },
+      sellerWallet: { ...sellerWallet, user: sellerUser },
+      contractAddress: null,
+    };
+
+    beforeEach(() => {
+      const manager = dataSource.manager;
+
+      // findOne: oferta con lock → oferta con source → sellerWallet → buyerWallet → contrato previo null → contrato creado
+      manager.findOne
+        .mockResolvedValueOnce(offer)             // EnergyOffer con lock
+        .mockResolvedValueOnce(offerWithSource)   // EnergyOffer con relaciones
+        .mockResolvedValueOnce(null)              // contrato previo: no existe
+        .mockResolvedValueOnce(savedContract);    // findContractWithRelations
+
+      manager.findOneOrFail
+        .mockResolvedValueOnce(sellerWallet)
+        .mockResolvedValueOnce(buyerWallet);
+
+      manager.create.mockReturnValue(savedContract);
+      manager.save.mockResolvedValue(savedContract);
+
+      (blockchainService.deployEnergyContract as jest.Mock).mockResolvedValue('0xNEW_CONTRACT');
+      (blockchainService.activateContract    as jest.Mock).mockResolvedValue('0xACTIVATED');
+
+      contractRepo.save.mockResolvedValue({ ...savedContract, contractAddress: '0xNEW_CONTRACT', status: 'ACTIVE' });
+    });
+
+    it('despliega el contrato en blockchain y retorna con status ACTIVE', async () => {
+      const result = await service.contractOffer(buyerUser.id, 'offer-id');
+
+      expect(blockchainService.deployEnergyContract).toHaveBeenCalledWith(
+        '0xBUYER', '0xSELLER', '500',
+        expect.any(Number), expect.any(Number),
+        'SOLAR',
+      );
+      expect(blockchainService.activateContract).toHaveBeenCalledWith('0xNEW_CONTRACT');
+      expect(contractRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ contractAddress: '0xNEW_CONTRACT', status: ContractStatus.ACTIVE })
+      );
+    });
+
+    it('lanza BadRequestException si la oferta no está OPEN', async () => {
+      const manager = dataSource.manager;
+      manager.findOne.mockReset();
+      manager.findOne.mockResolvedValueOnce({ ...offer, status: 'CONTRACTED' });
+
+      await expect(
+        service.contractOffer(buyerUser.id, 'offer-id')
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('lanza BadRequestException si buyer y seller son la misma wallet', async () => {
+      const manager = dataSource.manager;
+      manager.findOne.mockReset();
+      manager.findOneOrFail.mockReset();
+      manager.findOne
+        .mockResolvedValueOnce(offer)
+        .mockResolvedValueOnce(offerWithSource);
+
+      // mismo id para buyer y seller — la validacion ocurre antes de findContractWithRelations
+      manager.findOneOrFail
+        .mockResolvedValueOnce(sellerWallet)  // sellerWallet
+        .mockResolvedValueOnce(sellerWallet); // buyerWallet con mismo id
+
+      await expect(
+        service.contractOffer(sellerUser.id, 'offer-id')
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('marca el contrato como FAILED si blockchain falla', async () => {
+      (blockchainService.deployEnergyContract as jest.Mock).mockRejectedValue(
+        new Error('RPC timeout')
+      );
+
+      await expect(
+        service.contractOffer(buyerUser.id, 'offer-id')
+      ).rejects.toThrow(InternalServerErrorException);
+
+      expect(contractRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ status: ContractStatus.FAILED, isActive: false })
+      );
+    });
+  });
 
   // ─── findContractById ──────────────────────────────────────────────────────
 

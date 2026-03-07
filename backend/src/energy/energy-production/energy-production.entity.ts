@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Index, JoinColumn } from 'typeorm';
 import { EnergySource } from 'energy/energy-source/energy-source.entity';
 import { BlockchainSyncStatus } from 'energy/energy-production/graphql/dto/energy-production.enums';
 
@@ -26,6 +26,10 @@ export class EnergyProduction {
   createdAt: Date;
 
   // Relaciones ORM
+  @Column({ nullable: true })
+  energySourceId: string;
+
   @ManyToOne(() => EnergySource, es => es.productions, { eager: true })
+  @JoinColumn({ name: 'energySourceId' })
   energySource: EnergySource;
 }

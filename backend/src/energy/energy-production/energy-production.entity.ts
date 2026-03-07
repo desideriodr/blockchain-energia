@@ -1,9 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Index } from 'typeorm';
 import { EnergySource } from 'energy/energy-source/energy-source.entity';
 import { BlockchainSyncStatus } from 'energy/energy-production/graphql/dto/energy-production.enums';
 
 
 @Entity('energy_production')
+@Index(['energySourceId']) // agregaciones frecuentes por fuente en el dashboard
 export class EnergyProduction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -13,9 +14,6 @@ export class EnergyProduction {
 
   @Column('numeric', { precision: 12, scale: 2 })
   amount: string;
-
-  @Column({ nullable: true })
-  assetId: number; // opcional, referencia a equipment/asset
 
   @Column({
     type: 'enum',

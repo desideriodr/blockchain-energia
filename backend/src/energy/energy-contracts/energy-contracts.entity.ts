@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Wallet } from "../../finance/wallet/wallet.entity";
 import { EnergyConsumption } from "energy/energy-consumption/energy-consumption.entity";
+import { EnergyOffer } from "energy/energy-offer/energy-offer.entity";
 
 export enum ContractStatus {
     FAILED = 'FAILED',
@@ -14,12 +15,13 @@ export enum ContractStatus {
 }
 
 @Entity('energy_contracts')
+@Index(['status']) // búsquedas frecuentes por estado del contrato
 export class EnergyContract {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
-    offerId: string; // referencia histórica
+    @Column({ nullable: true })
+    offerId: string; // referencia histórica — se mantiene para compatibilidad
 
     @Column({ unique: true, nullable: true })
     contractAddress: string;
@@ -37,8 +39,8 @@ export class EnergyContract {
     })
     status: ContractStatus;
 
-    @Column('decimal', { precision: 18, scale: 0, nullable: true })
-    commissionCOP?: string;
+    @Column('decimal', { precision: 18, scale: 0, default: 0 })
+    commissionCOP: string;
 
     @Column('int', { default: 12 })
     contractDurationMonths: number;
@@ -64,4 +66,7 @@ export class EnergyContract {
 
     @OneToMany(() => EnergyConsumption, consumption => consumption.contract)
     consumptions: EnergyConsumption[];
+
+    @ManyToOne(() => EnergyOffer, { nullable: true })
+    offer: EnergyOffer;
 }

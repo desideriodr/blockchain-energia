@@ -162,13 +162,13 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    actor Comprador
+    actor Prosumidor
     participant BE as NestJS Backend
     participant DB as PostgreSQL
     participant PORT as IEnergyContractBlockchain
     participant BC as Hardhat Node
 
-    Comprador->>BE: mutation contractOffer(offerId)
+    Prosumidor->>BE: mutation contractOffer(offerId)
 
     rect rgb(20, 40, 80)
         Note over BE,DB: Transacción DB ACID
@@ -187,7 +187,7 @@ sequenceDiagram
     end
 
     BE->>DB: update contract ACTIVE + sourceType
-    BE-->>Comprador: contractAddress y status ACTIVE
+    BE-->>Prosumidor: contractAddress y status ACTIVE
 ```
 
 ---

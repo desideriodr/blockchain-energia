@@ -76,7 +76,6 @@ const isProd = process.env.NODE_ENV === 'production';
         // playground e introspection: solo en desarrollo en producción expone schema completo 
         playground: !isProd,
         introspection: !isProd,
-
         path: '/graphql',
         context: ({ req }) => ({
           req,

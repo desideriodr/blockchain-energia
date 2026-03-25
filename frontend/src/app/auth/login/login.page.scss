@@ -18,7 +18,6 @@
   position: relative;
   overflow: hidden;
 
-  // Círculos decorativos de fondo
   &::before {
     content: '';
     position: absolute;
@@ -48,6 +47,8 @@
   align-items: center;
   gap: 1.5rem;
   text-align: center;
+  width: 100%;
+  max-width: 360px;
 }
 
 .brand-logo {
@@ -84,7 +85,6 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-top: 1rem;
   padding: 1.25rem 2rem;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
@@ -116,6 +116,90 @@
   width: 1px;
   height: 32px;
   background: rgba(255,255,255,0.1);
+}
+
+/* ── Sello Academico ── */
+.academic-badge {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(74,217,203,0.15);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.academic-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4ad9cb;
+}
+
+.academic-institution {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4ad9cb;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.academic-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+}
+
+.academic-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.group-label {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.group-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #a5f3fc;
+  letter-spacing: 1px;
+}
+
+.academic-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.line-tag {
+  font-size: 0.62rem;
+  color: rgba(74,217,203,0.8);
+  background: rgba(74,217,203,0.08);
+  border: 1px solid rgba(74,217,203,0.2);
+  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.academic-title {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.6;
+  margin: 0;
+  font-style: italic;
+}
+
+.academic-author {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.3px;
 }
 
 /* ── Form Panel ── */

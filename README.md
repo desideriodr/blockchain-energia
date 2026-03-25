@@ -2,10 +2,8 @@
 
 > Prototipo de plataforma P2P de comercio de energía renovable construida sobre Ethereum. Permite a prosumidores vender el excedente de su producción energética directamente a consumidores mediante contratos inteligentes, sin intermediarios. Cada kWh producido se certifica on-chain como un Certificado de Energía Renovable (REC) mediante un token ERC-20, y se quema al ser consumido, garantizando trazabilidad completa de la fuente energética.
 
-Grupo de Investigacion - GRIIS
-Arquitectura y Diseno de Software
-Desarrollo de Software Web
-Industria 4.0
+Grupo de Investigacion - GRIIS - Arquitectura y Diseno de Software - Desarrollo de Software Web - Industria 4.0
+
 
 <div align="center">
 

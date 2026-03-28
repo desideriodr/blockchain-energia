@@ -9,8 +9,16 @@ import { IOT_CHANNEL, IoTMeterReading, IoTMeterDemand, IoTNetworkStatus } from '
 
 function createRedisClient(): Redis {
   const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-  const isTls = redisUrl.startsWith('rediss://');
-  return new Redis(redisUrl, isTls ? { tls: {} } : {});
+  const url = new URL(redisUrl);
+  const isTls = url.protocol === 'rediss:';
+
+  return new Redis({
+    host: url.hostname,
+    port: parseInt(url.port || '6379'),
+    password: url.password || undefined,
+    tls: isTls ? {} : undefined,
+    maxRetriesPerRequest: null,
+  });
 }
 
 @Injectable()

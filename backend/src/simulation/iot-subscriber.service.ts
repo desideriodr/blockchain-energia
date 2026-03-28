@@ -17,8 +17,16 @@ import {
 
 function createRedisClient(): Redis {
   const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-  const isTls = redisUrl.startsWith('rediss://');
-  return new Redis(redisUrl, isTls ? { tls: {} } : {});
+  const url = new URL(redisUrl);
+  const isTls = url.protocol === 'rediss:';
+
+  return new Redis({
+    host: url.hostname,
+    port: parseInt(url.port || '6379'),
+    password: url.password || undefined,
+    tls: isTls ? {} : undefined,
+    maxRetriesPerRequest: null,
+  });
 }
 
 @Injectable()
@@ -35,8 +43,6 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    // Redis Pub/Sub requiere una conexion dedicada —
-    // una conexion en modo subscribe no puede usarse para otros comandos
     this.subscriber = createRedisClient();
 
     this.subscriber.on('connect', () =>

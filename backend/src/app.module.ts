@@ -35,7 +35,7 @@ dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
 
-// Habilitar playground en produccion para sustentacion.
+// Habilitar playground para sustentacion.
 // Cambiar a !isProd una vez finalizada la presentacion.
 const GRAPHQL_PLAYGROUND = true;
 
@@ -49,7 +49,7 @@ const GRAPHQL_PLAYGROUND = true;
     ]),
 
     // DATABASE
-    // ssl: requerido por Supabase en produccion
+    // ssl requerido por Supabase en produccion
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -89,18 +89,27 @@ const GRAPHQL_PLAYGROUND = true;
     // CACHE (Redis con fallback a memoria)
     AppCacheModule,
 
-    // BULLMQ
+    // BULLMQ — TLS activo para Upstash (rediss://)
     BullModule.forRootAsync({
-      useFactory: () => ({
-        connection: {
-          host: process.env.REDIS_URL
-            ? new URL(process.env.REDIS_URL).hostname
-            : 'localhost',
-          port: process.env.REDIS_URL
-            ? parseInt(new URL(process.env.REDIS_URL).port || '6379')
-            : 6379,
-        },
-      }),
+      useFactory: () => {
+        const redisUrl = process.env.REDIS_URL;
+
+        if (!redisUrl) {
+          return { connection: { host: 'localhost', port: 6379 } };
+        }
+
+        const url = new URL(redisUrl);
+        const isTls = url.protocol === 'rediss:';
+
+        return {
+          connection: {
+            host: url.hostname,
+            port: parseInt(url.port || '6379'),
+            password: url.password || undefined,
+            tls: isTls ? {} : undefined,
+          },
+        };
+      },
     }),
 
     // FEATURE MODULES

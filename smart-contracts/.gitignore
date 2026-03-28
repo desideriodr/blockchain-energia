@@ -18,3 +18,9 @@
 
 # Hardhat coverage reports
 /coverage
+
+# Variables de entorno — NUNCA al repositorio
+.env
+
+# Ignition deployments state (contiene addresses reales — opcional excluir)
+# /ignition/deployments

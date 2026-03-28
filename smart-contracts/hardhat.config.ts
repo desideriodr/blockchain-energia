@@ -1,3 +1,4 @@
+import "dotenv/config";
 import "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import "@nomicfoundation/hardhat-ignition";
 import { configVariable, defineConfig } from "hardhat/config";
@@ -19,14 +20,17 @@ export default defineConfig({
       },
     },
   },
+
   test: {
     mocha: {
       timeout: 60000,
     },
   },
+
   paths: {
     tests: "./test",
   },
+
   networks: {
     hardhatMainnet: {
       type: "edr-simulated",
@@ -42,5 +46,9 @@ export default defineConfig({
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
     },
-  }
+  },
+
+  sourcify: {
+    enabled: true,
+  },
 });

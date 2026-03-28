@@ -1,15 +1,15 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ethers, NonceManager, parseUnits } from 'ethers';
 import { Mutex } from 'async-mutex';
-import * as energyArtifact from '../../../../smart-contracts/artifacts/contracts/EnergySupplyContract.sol/EnergySupplyContract.json';
-import * as recArtifact from '../../../../smart-contracts/artifacts/contracts/EnergyREC.sol/EnergyREC.json';
+import * as energyArtifact from './abis/EnergySupplyContract.json';
+import * as recArtifact from './abis/EnergyREC.json';
 import { IEnergyContractBlockchain } from './ports/energy-contracts-blockchain.port';
 
 /* BlockchainService
  * Arquitectura hexagonal - adaptador
  * se encarga de comunicarse con el servicio de blockchain actual
  * sin depender de el (puerto - adaptador)
- */ 
+ */
 @Injectable()
 export class BlockchainService implements IEnergyContractBlockchain, OnModuleInit {
   private provider!: ethers.JsonRpcProvider;

@@ -1,9 +1,13 @@
-/* Verifica los registros de EnergyREC en la blockchain
- * npx hardhat run scripts/replayEnergyREC.ts --network hardhatMainnet
+/* Verifica y reproduce los registros on-chain de EnergyREC
+ *
+ * Local:
+ *   npx hardhat run scripts/replayEnergyREC.ts --network hardhatMainnet
+ *
+ * Sepolia:
+ *   npx hardhat run scripts/replayEnergyREC.ts --network sepolia
  */
 
-import hre from "hardhat";
-import { ethers } from "ethers";
+import { ethers, network, artifacts } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
@@ -11,36 +15,49 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BACKEND_ENV = path.resolve(__dirname, "../../backend/.env");
 
-// Leer .env del backend manualmente
-if (fs.existsSync(BACKEND_ENV)) {
+function loadBackendEnv(): void {
+  if (!fs.existsSync(BACKEND_ENV)) {
+    console.warn(`WARN: backend/.env no encontrado en ${BACKEND_ENV}`);
+    return;
+  }
   const lines = fs.readFileSync(BACKEND_ENV, "utf8").split(/\r?\n/);
   for (const line of lines) {
-    if (line.includes("ENERGY_REC")) console.log("DEBUG LINE:", JSON.stringify(line));
-    const match = line.match(/^([^#=]+)=(.*)$/);
+    const match = line.match(/^([^#=\s][^=]*)=(.*)$/);
     if (match) process.env[match[1].trim()] = match[2].trim();
   }
-} else {
-  console.warn("WARN: .env no encontrado en:", BACKEND_ENV);
 }
-console.log("DEBUG __dirname:", __dirname);
-console.log("DEBUG ENERGY_REC:", process.env.ENERGY_REC_CONTRACT_ADDRESS);
 
-async function main() {
-  const provider = new ethers.JsonRpcProvider("http://127.0.0.1:8545");
+interface EventEntry {
+  bloque: number;
+  txHash: string;
+  args: Record<string, string>;
+}
+
+async function main(): Promise<void> {
+  loadBackendEnv();
+
+  console.log(`\nRed activa: ${network.name}`);
+
+  const provider = ethers.provider;
 
   const recAddress = process.env.ENERGY_REC_CONTRACT_ADDRESS;
-  if (!recAddress) throw new Error("ENERGY_REC_CONTRACT_ADDRESS not defined");
+  if (!recAddress) {
+    throw new Error(
+      "ENERGY_REC_CONTRACT_ADDRESS no definida.\n" +
+        "Ejecuta primero: npx hardhat run scripts/deployEnergyREC.ts --network " + network.name
+    );
+  }
 
-  const artifact = await hre.artifacts.readArtifact("EnergyREC");
-  const iface = new ethers.Interface(artifact.abi);
+  const artifact = await artifacts.readArtifact("EnergyREC");
+  const iface    = new ethers.Interface(artifact.abi);
   const contract = new ethers.Contract(recAddress, artifact.abi, provider);
 
-  console.log("=== EnergyREC CONTRACT ===");
-  console.log("Direccion:", recAddress);
-  console.log("Nombre:   ", await contract.name());
-  console.log("Simbolo:  ", await contract.symbol());
-  console.log("Oracle:   ", await contract.oracle());
-  console.log("Total supply:", (await contract.totalSupply()).toString(), "unidades (x10^4 kWh)");
+  console.log("\n=== EnergyREC CONTRACT ===");
+  console.log(`Direccion    : ${recAddress}`);
+  console.log(`Nombre       : ${await contract.name()}`);
+  console.log(`Simbolo      : ${await contract.symbol()}`);
+  console.log(`Oracle       : ${await contract.oracle()}`);
+  console.log(`Total supply : ${(await contract.totalSupply()).toString()} unidades (x10^4 kWh)`);
 
   const logsRaw = await provider.getLogs({
     address: recAddress,
@@ -48,84 +65,84 @@ async function main() {
     toBlock: "latest",
   });
 
-  console.log(`\nTotal de eventos encontrados: ${logsRaw.length}`);
+  console.log(`\nTotal eventos encontrados: ${logsRaw.length}`);
 
-  const mints: any[] = [];
-  const burns: any[] = [];
+  const mints: EventEntry[] = [];
+  const burns: EventEntry[] = [];
 
   for (const log of logsRaw) {
     try {
       const parsed = iface.parseLog(log);
       if (!parsed) continue;
 
-      const entry: any = {
+      const entry: EventEntry = {
         bloque: log.blockNumber,
         txHash: log.transactionHash,
-        args: {} as Record<string, any>,
+        args:   {},
       };
 
       parsed.fragment.inputs.forEach((input, i) => {
         const val = parsed.args[i];
-        entry.args[input.name] = typeof val === "bigint" ? val.toString() : val;
+        entry.args[input.name] = typeof val === "bigint" ? val.toString() : String(val);
       });
 
       if (parsed.name === "RECMinted") mints.push(entry);
       if (parsed.name === "RECBurned") burns.push(entry);
     } catch {
-      // ignorar
+      // log no reconocido — ignorar
     }
   }
 
-  // MINTS
-  console.log(`\n=== RECMinted - Producciones certificadas (${mints.length}) ===`);
+  console.log(`\n=== RECMinted — Producciones certificadas (${mints.length}) ===`);
   if (mints.length === 0) {
     console.log("Sin registros aun.");
   } else {
-    for (const m of mints) {
-      const kwh = (Number(m.args.kwhAmount) / 10_000).toFixed(4);
-      const fecha = new Date(Number(m.args.timestamp) * 1000).toLocaleString();
-      console.log(`\n  Bloque:    ${m.bloque}`);
-      console.log(`  Tx:        ${m.txHash}`);
-      console.log(`  Productor: ${m.args.producer}`);
-      console.log(`  Fuente:    ${m.args.sourceType}`);
-      console.log(`  kWh:       ${kwh}`);
-      console.log(`  Fecha:     ${fecha}`);
+    for (const entry of mints) {
+      const kwh   = (Number(entry.args.kwhAmount) / 10_000).toFixed(4);
+      const fecha = new Date(Number(entry.args.timestamp) * 1000).toLocaleString();
+      console.log(`\n  Bloque    : ${entry.bloque}`);
+      console.log(`  Tx        : ${entry.txHash}`);
+      console.log(`  Productor : ${entry.args.producer}`);
+      console.log(`  Fuente    : ${entry.args.sourceType}`);
+      console.log(`  kWh       : ${kwh}`);
+      console.log(`  Fecha     : ${fecha}`);
     }
   }
 
-  // BURNS
-  console.log(`\n=== RECBurned - Consumos certificados (${burns.length}) ===`);
+  console.log(`\n=== RECBurned — Consumos certificados (${burns.length}) ===`);
   if (burns.length === 0) {
     console.log("Sin registros aun.");
   } else {
-    for (const b of burns) {
-      const kwh = (Number(b.args.kwhAmount) / 10_000).toFixed(4);
-      const fecha = new Date(Number(b.args.timestamp) * 1000).toLocaleString();
-      console.log(`\n  Bloque:    ${b.bloque}`);
-      console.log(`  Tx:        ${b.txHash}`);
-      console.log(`  Consumidor: ${b.args.consumer}`);
-      console.log(`  Contrato:  ${b.args.contractAddress}`);
-      console.log(`  kWh:       ${kwh}`);
-      console.log(`  Fecha:     ${fecha}`);
+    for (const entry of burns) {
+      const kwh   = (Number(entry.args.kwhAmount) / 10_000).toFixed(4);
+      const fecha = new Date(Number(entry.args.timestamp) * 1000).toLocaleString();
+      console.log(`\n  Bloque    : ${entry.bloque}`);
+      console.log(`  Tx        : ${entry.txHash}`);
+      console.log(`  Consumidor: ${entry.args.consumer}`);
+      console.log(`  Contrato  : ${entry.args.contractAddress}`);
+      console.log(`  kWh       : ${kwh}`);
+      console.log(`  Fecha     : ${fecha}`);
     }
   }
 
-  // BALANCES
   const addresses = new Set<string>([
-    ...mints.map((m) => m.args.producer),
-    ...burns.map((b) => b.args.consumer),
+    ...mints.map((e) => e.args.producer),
+    ...burns.map((e) => e.args.consumer),
   ]);
 
   if (addresses.size > 0) {
     console.log("\n=== Balances REC actuales por direccion ===");
     for (const addr of addresses) {
       const balance = await contract.balanceOf(addr);
-      const kwh = (Number(balance) / 10_000).toFixed(4);
-      console.log(`  ${addr} -> ${kwh} kWh en RECs`);
+      const kwh     = (Number(balance) / 10_000).toFixed(4);
+      console.log(`  ${addr}  ->  ${kwh} kWh en RECs`);
     }
   }
 
   console.log("\nVerificacion completa.");
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

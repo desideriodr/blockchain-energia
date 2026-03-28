@@ -35,15 +35,12 @@ dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
 
+// Habilitar playground en produccion para sustentacion.
+// Cambiar a !isProd una vez finalizada la presentacion.
+const GRAPHQL_PLAYGROUND = true;
+
 @Module({
   imports: [
-    /* RATE LIMITING
-     * Patrón: proteción total y automatica de endpoints 
-     * ttl: ventana de tiempo (ms)
-     * limit: max request por ventana por IP
-     *  100 request/IP en producción
-     *  100 request/IP en desarrollo 
-    */
     ThrottlerModule.forRoot([
       {
         ttl: 60_000,
@@ -52,6 +49,7 @@ const isProd = process.env.NODE_ENV === 'production';
     ]),
 
     // DATABASE
+    // ssl: requerido por Supabase en produccion
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -60,10 +58,9 @@ const isProd = process.env.NODE_ENV === 'production';
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
       autoLoadEntities: true,
-      // synchronize: solo en desarrollo en produccion puede destruir datos al desplegar
       synchronize: !isProd && process.env.DB_SYNC === 'true',
-      // logging: solo en desarrollo en producción expone datos en logs
       logging: !isProd,
+      ssl: isProd ? { rejectUnauthorized: false } : false,
     }),
 
     // GRAPHQL
@@ -73,15 +70,14 @@ const isProd = process.env.NODE_ENV === 'production';
       inject: [getRepositoryToken(EnergyProduction), getRepositoryToken(EnergyConsumption)],
       useFactory: (pdRepo, consumptionRepo) => ({
         autoSchemaFile: true,
-        // playground e introspection: solo en desarrollo en producción expone schema completo 
-        playground: !isProd,
-        introspection: !isProd,
+        playground: GRAPHQL_PLAYGROUND,
+        introspection: GRAPHQL_PLAYGROUND,
         path: '/graphql',
         context: ({ req }) => ({
           req,
           loaders: {
             productionLoader: createProductionBySourceLoader(pdRepo),
-            consumptionsLoader: createConsumptionsLoader(consumptionRepo)
+            consumptionsLoader: createConsumptionsLoader(consumptionRepo),
           },
         }),
       }),
@@ -90,10 +86,10 @@ const isProd = process.env.NODE_ENV === 'production';
     // SCHEDULER
     ScheduleModule.forRoot(),
 
-    //CACHE (Redis con fallback a memoria)
+    // CACHE (Redis con fallback a memoria)
     AppCacheModule,
 
-    // BULLMQ — Cola de trabajos para simulaciones (requiere Redis)
+    // BULLMQ
     BullModule.forRootAsync({
       useFactory: () => ({
         connection: {
@@ -119,7 +115,7 @@ const isProd = process.env.NODE_ENV === 'production';
     EnergyConsumptionModule,
     WalletModule,
     WalletTransactionsModule,
-    DashboardModule
+    DashboardModule,
   ],
 
   controllers: [AppController],
@@ -131,4 +127,4 @@ const isProd = process.env.NODE_ENV === 'production';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

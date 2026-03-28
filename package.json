@@ -3,6 +3,10 @@
     "@openzeppelin/contracts": "^5.4.0"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.14"
+    "@nestjs/cli": "^11.0.16"
+  },
+  "overrides": {
+    "ajv": "^8.18.0",
+    "picomatch": "^4.0.4"
   }
 }

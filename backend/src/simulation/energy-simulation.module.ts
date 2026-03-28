@@ -11,18 +11,17 @@ import { BlockchainModule } from 'infrastructure/blockchain/blockchain.module';
 
 import { EnergySimulationScheduler } from './energy-simulation.scheduler';
 import { ProductionWorker, ConsumptionWorker } from './energy-simulation.worker';
-import { IoTGatewayService } from './iot-gateway.service';
-import { IoTSubscriberService } from './iot-subscriber.service';
 import { SIMULATION_QUEUE } from './simulation.constants';
 
 /**
- * EnergySimulationModule — Módulo de simulación con BullMQ
+ * EnergySimulationModule
  *
- * Registra dos colas separadas:
- *  - simulation:production → jobs de producción de energía por fuente
- *  - simulation:consumption → jobs de consumo por contrato
- *  Fujo completo:
- *    IoTGateway → Redis Pub/Sub → IoTSubscriber → BullMQ → Worker → DB + Blockchain
+ * Flujo simplificado sin Redis Pub/Sub:
+ *   Cron (Scheduler) → BullMQ → Workers → DB + Blockchain
+ *
+ * IoTGatewayService e IoTSubscriberService eliminados —
+ * eran intermediarios innecesarios que requerían conexiones
+ * TCP persistentes incompatibles con Upstash serverless.
  */
 @Module({
   imports: [
@@ -40,11 +39,9 @@ import { SIMULATION_QUEUE } from './simulation.constants';
     BlockchainModule,
   ],
   providers: [
-    EnergySimulationScheduler, // cron — activa el gateway
-    IoTGatewayService,         // publica en Redis Pub/Sub
-    IoTSubscriberService,      // suscribe y encola en BullMQ
-    ProductionWorker,          // procesa jobs de producción
-    ConsumptionWorker,         // procesa jobs de consumo
+    EnergySimulationScheduler,
+    ProductionWorker,
+    ConsumptionWorker,
   ],
 })
 export class EnergySimulationModule {}

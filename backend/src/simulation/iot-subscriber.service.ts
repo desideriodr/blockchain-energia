@@ -17,8 +17,18 @@ import {
 
 function createRedisClient(): Redis {
   const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-  // ioredis v5 detecta rediss:// automaticamente y activa TLS
-  return new Redis(redisUrl);
+  const url = new URL(redisUrl);
+  const isTls = url.protocol === 'rediss:';
+
+  return new Redis({
+    host: url.hostname,
+    port: parseInt(url.port || '6379'),
+    password: url.password || undefined,
+    tls: isTls ? { rejectUnauthorized: false } : undefined,
+    enableOfflineQueue: false,
+    maxRetriesPerRequest: 3,
+    retryStrategy: (times) => Math.min(times * 500, 5000),
+  });
 }
 
 @Injectable()

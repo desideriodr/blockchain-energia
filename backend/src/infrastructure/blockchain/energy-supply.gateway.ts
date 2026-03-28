@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
 import { ethers } from "ethers";
-import * as energyArtifact from "../../../../smart-contracts/artifacts/contracts/EnergySupplyContract.sol/EnergySupplyContract.json";
+import * as energyArtifact from "./abis/EnergySupplyContract.json";
 
 @Injectable()
 export class EnergySupplyGateway implements OnModuleInit {

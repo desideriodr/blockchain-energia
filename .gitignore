@@ -159,3 +159,7 @@ dist
 
 # TypeORM migrations generadas
 src/migrations/
+
+# Claude
+.claude/*
+.claude

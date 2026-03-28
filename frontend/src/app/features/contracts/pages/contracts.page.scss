@@ -83,6 +83,28 @@
       }
     }
 
+    // Badge de estado
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+
+      &.status-active {
+        background-color: #dcfce7;
+        color: #15803d;
+      }
+
+      &.status-suspended_insufficient_funds,
+      &.status-suspended_no_production {
+        background-color: #fff7ed;
+        color: #c2410c;
+      }
+    }
+
     // Mensaje sin contratos
     .no-contracts {
       text-align: center;

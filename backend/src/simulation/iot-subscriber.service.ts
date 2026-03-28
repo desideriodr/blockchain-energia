@@ -15,18 +15,12 @@ import {
   SimulateContractJobData,
 } from './simulation.constants';
 
-/**
- * IoTSubscriberService — Suscriptor de mensajes IoT
- *
- * Escucha los canales Redis Pub/Sub donde el IoTGateway
- * publica las lecturas de los medidores inteligentes.
- *
- * Al recibir una lectura la convierte en un job BullMQ
- * para su procesamiento asíncrono por los Workers.
- *
- * Patrón: Subscriber (Redis Pub/Sub) → Producer (BullMQ)
- *
- */
+function createRedisClient(): Redis {
+  const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+  const isTls = redisUrl.startsWith('rediss://');
+  return new Redis(redisUrl, isTls ? { tls: {} } : {});
+}
+
 @Injectable()
 export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(IoTSubscriberService.name);
@@ -41,31 +35,26 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit() {
-    const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-
-    // Redis Pub/Sub requiere una conexión dedicada —
-    // una conexión en modo subscribe no puede usarse para otros comandos
-    this.subscriber = new Redis(redisUrl);
+    // Redis Pub/Sub requiere una conexion dedicada —
+    // una conexion en modo subscribe no puede usarse para otros comandos
+    this.subscriber = createRedisClient();
 
     this.subscriber.on('connect', () =>
       this.logger.log('IoT Subscriber conectado a Redis Pub/Sub'),
     );
 
-    // Suscribirse a los patrones de topics MQTT simulados
-    // psubscribe permite wildcard: iot/meter/*/reading
     this.subscriber.psubscribe(
-      'iot/meter/*/reading',  // lecturas de producción
-      'iot/meter/*/demand',   // lecturas de consumo
+      'iot/meter/*/reading',
+      'iot/meter/*/demand',
       (err, count) => {
         if (err) {
-          this.logger.error('Error suscribiéndose a canales IoT:', err);
+          this.logger.error('Error suscribiendose a canales IoT:', err);
           return;
         }
         this.logger.log(`IoT Subscriber activo — ${count} patrones suscritos`);
       },
     );
 
-    // Handler de mensajes recibidos
     this.subscriber.on('pmessage', (_pattern, channel, message) => {
       this.handleMessage(channel, message).catch(err =>
         this.logger.error(`Error procesando mensaje del canal ${channel}:`, err),
@@ -77,11 +66,6 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
     await this.subscriber.quit();
   }
 
-  /**
-   * Enruta el mensaje al handler correcto según el topic.
-   * Replica el comportamiento de un broker MQTT que enruta
-   * mensajes a suscriptores por topic.
-   */
   private async handleMessage(channel: string, message: string): Promise<void> {
     try {
       const payload = JSON.parse(message);
@@ -92,14 +76,10 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
         await this.handleMeterDemand(payload as IoTMeterDemand);
       }
     } catch (err) {
-      this.logger.error(`Mensaje inválido en canal ${channel}:`, err);
+      this.logger.error(`Mensaje invalido en canal ${channel}:`, err);
     }
   }
 
-  /**
-   * Convierte una lectura de producción IoT en un job BullMQ.
-   * El Worker procesará el job fuera del event loop principal.
-   */
   private async handleMeterReading(payload: IoTMeterReading): Promise<void> {
     const jobData: SimulateSourceJobData = {
       sourceId:   payload.deviceId,
@@ -111,13 +91,10 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
     await this.productionQueue.add(SIMULATION_JOB.SIMULATE_SOURCE, jobData);
 
     this.logger.debug(
-      `[IoT→BullMQ] Producción encolada — device: ${payload.deviceId} tipo: ${payload.sourceType}`,
+      `[IoT→BullMQ] Produccion encolada — device: ${payload.deviceId} tipo: ${payload.sourceType}`,
     );
   }
 
-  /**
-   * Convierte una lectura de demanda IoT en un job BullMQ.
-   */
   private async handleMeterDemand(payload: IoTMeterDemand): Promise<void> {
     const jobData: SimulateContractJobData = {
       contractId: payload.contractId,

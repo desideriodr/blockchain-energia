@@ -9,16 +9,8 @@ import { IOT_CHANNEL, IoTMeterReading, IoTMeterDemand, IoTNetworkStatus } from '
 
 function createRedisClient(): Redis {
   const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-  const url = new URL(redisUrl);
-  const isTls = url.protocol === 'rediss:';
-
-  return new Redis({
-    host: url.hostname,
-    port: parseInt(url.port || '6379'),
-    password: url.password || undefined,
-    tls: isTls ? {} : undefined,
-    maxRetriesPerRequest: null,
-  });
+  // ioredis v5 detecta rediss:// automaticamente y activa TLS
+  return new Redis(redisUrl);
 }
 
 @Injectable()
@@ -41,7 +33,7 @@ export class IoTGatewayService implements OnModuleInit, OnModuleDestroy {
             this.logger.log(`IoT Gateway conectado — ID: ${this.gatewayId}`),
         );
         this.publisher.on('error', err =>
-            this.logger.error('IoT Gateway Redis error:', err),
+            this.logger.error('IoT Gateway Redis error:', err.message),
         );
     }
 
@@ -82,10 +74,7 @@ export class IoTGatewayService implements OnModuleInit, OnModuleDestroy {
             }),
         );
 
-        this.logger.log(
-            `[IoT] ${sources.length} lecturas publicadas — topic: iot/meter/+/reading`,
-        );
-
+        this.logger.log(`[IoT] ${sources.length} lecturas publicadas`);
         return sources.length;
     }
 
@@ -115,10 +104,7 @@ export class IoTGatewayService implements OnModuleInit, OnModuleDestroy {
             }),
         );
 
-        this.logger.log(
-            `[IoT] ${contracts.length} demandas publicadas — topic: iot/meter/+/demand`,
-        );
-
+        this.logger.log(`[IoT] ${contracts.length} demandas publicadas`);
         return contracts.length;
     }
 
@@ -129,9 +115,6 @@ export class IoTGatewayService implements OnModuleInit, OnModuleDestroy {
             timestamp: new Date().toISOString(),
             gatewayId: this.gatewayId,
         };
-        await this.publisher.publish(
-            IOT_CHANNEL.NETWORK_STATUS,
-            JSON.stringify(status),
-        );
+        await this.publisher.publish(IOT_CHANNEL.NETWORK_STATUS, JSON.stringify(status));
     }
 }

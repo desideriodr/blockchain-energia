@@ -17,16 +17,8 @@ import {
 
 function createRedisClient(): Redis {
   const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-  const url = new URL(redisUrl);
-  const isTls = url.protocol === 'rediss:';
-
-  return new Redis({
-    host: url.hostname,
-    port: parseInt(url.port || '6379'),
-    password: url.password || undefined,
-    tls: isTls ? {} : undefined,
-    maxRetriesPerRequest: null,
-  });
+  // ioredis v5 detecta rediss:// automaticamente y activa TLS
+  return new Redis(redisUrl);
 }
 
 @Injectable()
@@ -49,12 +41,16 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
       this.logger.log('IoT Subscriber conectado a Redis Pub/Sub'),
     );
 
+    this.subscriber.on('error', err =>
+      this.logger.error('IoT Subscriber Redis error:', err.message),
+    );
+
     this.subscriber.psubscribe(
       'iot/meter/*/reading',
       'iot/meter/*/demand',
       (err, count) => {
         if (err) {
-          this.logger.error('Error suscribiendose a canales IoT:', err);
+          this.logger.error('Error suscribiendose a canales IoT:', err.message);
           return;
         }
         this.logger.log(`IoT Subscriber activo — ${count} patrones suscritos`);
@@ -75,7 +71,6 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
   private async handleMessage(channel: string, message: string): Promise<void> {
     try {
       const payload = JSON.parse(message);
-
       if (channel.endsWith('/reading')) {
         await this.handleMeterReading(payload as IoTMeterReading);
       } else if (channel.endsWith('/demand')) {
@@ -93,12 +88,7 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
       sourceType: payload.sourceType,
       capacityKw: payload.capacityKw,
     };
-
     await this.productionQueue.add(SIMULATION_JOB.SIMULATE_SOURCE, jobData);
-
-    this.logger.debug(
-      `[IoT→BullMQ] Produccion encolada — device: ${payload.deviceId} tipo: ${payload.sourceType}`,
-    );
   }
 
   private async handleMeterDemand(payload: IoTMeterDemand): Promise<void> {
@@ -106,11 +96,6 @@ export class IoTSubscriberService implements OnModuleInit, OnModuleDestroy {
       contractId: payload.contractId,
       endDate:    payload.endDate,
     };
-
     await this.consumptionQueue.add(SIMULATION_JOB.SIMULATE_CONTRACT, jobData);
-
-    this.logger.debug(
-      `[IoT→BullMQ] Consumo encolado — device: ${payload.deviceId}`,
-    );
   }
 }
